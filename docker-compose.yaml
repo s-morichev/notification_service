@@ -10,14 +10,14 @@ services:
   auth:
     restart: "always"
     build:
-      context: ./auth
+      context: service_auth
       dockerfile: ./docker/Dockerfile
       target: development
       tags:
         - "auth"
     container_name: auth
     volumes:
-      - ./auth/src/:/opt/app/
+      - ./service_auth/src/:/opt/app/
     ports:
       - "5000:5000"
     env_file:
