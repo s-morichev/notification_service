@@ -8,6 +8,6 @@
 * Сергей Моричев https://github.com/s-morichev
 
 ### Структура разделов
-/service_auth - сервис аутентификации и авторизации
-/service_notice - сервис нотификации
-/admin_notice - админ-панель сервиса
+* /service_auth - сервис аутентификации и авторизации
+* /service_notice - сервис нотификации
+* /admin_notice - админ-панель сервиса
