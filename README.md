@@ -1,3 +1,11 @@
 # Проектная работа 10 спринта
+Основной репозиторий: https://github.com/Pummas/notifications_sprint_1
 
-Проектные работы в этом модуле в команде. Задания на спринт вы найдёте внутри тем.
+Над проектом работали:  
+* Михаил Лукин (Тимлид) https://github.com/Pummas
+* Валерия Малышева https://github.com/valerycode
+* Роман Боровский https://github.com/RomanBorovskiy
+* Сергей Моричев https://github.com/s-morichev
+
+### Структура разделов
+/auth - сервис аутентификации и авторизации
