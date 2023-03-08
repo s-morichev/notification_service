@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 from flask import testing
-from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from werkzeug.datastructures import Headers
 
 BASE_DIR = Path(__file__).parent.parent
