@@ -24,7 +24,11 @@ logger = logging.getLogger(__name__)
 )
 def init_rabbit():
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=settings.RABBITMQ_HOST, port=settings.RABBITMQ_PORT)
+        pika.ConnectionParameters(
+            host=settings.RABBITMQ_HOST,
+            port=settings.RABBITMQ_PORT,
+            credentials=pika.PlainCredentials(username=settings.RABBITMQ_USER, password=settings.RABBITMQ_PASSWORD),
+        )
     )
     channel = connection.channel()
     return channel
