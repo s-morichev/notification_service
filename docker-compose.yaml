@@ -47,6 +47,33 @@ services:
       - POSTGRES_PASSWORD=${PG_AUTH_PASSWORD}
       - POSTGRES_DB=${PG_AUTH_DB_NAME}
 
+  rabbitmq_notice:
+    image: rabbitmq:3.11-management
+    container_name: rabbitmq_notice
+    restart: always
+    ports:
+      - "${RABBITMQ_NOTICE_PORT}:5672"
+      - "${RABBITMQ_NOTICE_UI_PORT}:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_NOTICE_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_NOTICE_PASSWORD}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+    volumes:
+      - rabbitmq_notice_data:/var/lib/rabbitmq
+
+  email_sender:
+    build:
+      context: service_notice/email_sender
+      dockerfile: ./Dockerfile
+    container_name: email_sender
+    volumes:
+      - ./service_notice/email_sender/src/:/opt/app/
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq_notice
+
 volumes:
   postgres_auth_data:
   redis_auth_data:
+  rabbitmq_notice_data:
