@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  rabbitmq_broker:
+    image: rabbitmq:3.10.6-management
+    container_name: rabbitmq_broker
+    ports:
+      - "5672:5672"
+      - "8072:15672"
+    env_file:
+      - .env
+    healthcheck:
+      test: rabbitmq-diagnostics -q status
+      interval: 15s
+      timeout: 2s
+      retries: 15

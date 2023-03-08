@@ -1,0 +1,7 @@
+fastapi==0.92.0
+python-dotenv==1.0.0
+uvicorn[standard]==0.20.0
+aio-pika==9.0.4
+
+pydantic=1.10.5
+backoff=2.2.1
