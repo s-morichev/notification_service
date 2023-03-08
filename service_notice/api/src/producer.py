@@ -41,7 +41,3 @@ class RabbitMQ(BaseProducer):
                 Message(body=json.dumps(message).encode('utf-8')),
                 routing_key=queue.name)
             return "Message sent"
-        # except RuntimeError:
-        #     print('asdasds')
-        #     await self.connect_broker()
-        #     await self.publish(queue_name, message)
