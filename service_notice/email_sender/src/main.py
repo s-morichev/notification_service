@@ -6,7 +6,7 @@ import pika
 from pika.exceptions import AMQPConnectionError
 from pydantic import ValidationError
 
-import logging_config
+import logging_config  # noqa
 from config import settings
 from models import EmailNotification
 from senders import DebugSender, SendgridSender

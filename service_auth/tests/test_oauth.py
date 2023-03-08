@@ -18,7 +18,6 @@ class TestClientOauth(OAuthSignIn):
         return redirect(self.get_callback_url() + "?code=123456")
 
     def callback(self):
-
         if "code" not in request.args:
             return None, None, None
 

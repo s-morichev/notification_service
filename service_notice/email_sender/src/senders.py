@@ -36,7 +36,7 @@ class SendgridSender(BaseSender):
         )
         try:
             response = self.sendgrid_client.send(message=message)
-        except HTTPError as err:
+        except HTTPError:
             logger.exception("Error on sending email notification %s", notice.json())
             self.handle_unsent(notice)
             return
