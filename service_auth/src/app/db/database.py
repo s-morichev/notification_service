@@ -38,6 +38,25 @@ class Role(BaseModel):
         return cls(id=db_role.id, name=db_role.name)
 
 
+class UserInfo(BaseModel):
+    user_id: UserID
+    email: str | None
+    phone: str | None
+    username: str
+    time_zone: str = "UTC"
+    reject_notice: list[str]
+
+    @classmethod
+    def from_db(cls, db_user: data.User):
+        return cls(
+            user_id=db_user.id,
+            email=db_user.email,
+            phone=db_user.phone,
+            username=db_user.username,
+            reject_notice=db_user.reject_notice,
+        )
+
+
 class User(BaseModel):
     id: UserID
     login: str
