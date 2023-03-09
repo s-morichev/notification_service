@@ -5,6 +5,7 @@ from fastapi.responses import ORJSONResponse
 
 from src.producer import RabbitMQ
 from src.settings import settings
+from src.tracer import init_tracer
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -22,6 +23,7 @@ async def startup_event():
     logging.debug("app startup")
     if not await producer.connect_broker():
         raise SystemExit("can't connect to rabbitmq brokers")
+    init_tracer(app)
 
 
 @app.on_event("shutdown")

@@ -1,12 +1,20 @@
+import datetime
 from types import NoneType
 from typing import List
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Message(BaseModel):
-    users_id: List[int]
+    x_request_id: str | NoneType
+    notice_id: UUID
+    users_id: List[UUID]
     template_id: int | NoneType = 1
-    text: str
+    extra: dict = Field(default_factory=dict)
+    transport: str
+    priority: str | NoneType = 0
     msg_type: int | NoneType
-    priority: str | NoneType = 'low'
+    text: str
+    expire_at: datetime.datetime
+
