@@ -7,7 +7,9 @@ from src.settings import settings
 router = APIRouter()
 
 
-@router.post("/publish/")
+@router.post("/publish/",
+             openapi_extra={"x-request-id": "request ID"},
+             status_code=status.HTTP_200_OK)
 async def publish(message: Message):
     try:
         return await producer.publish(queue_name=settings.QUEUE_NAME, message=message.dict())
