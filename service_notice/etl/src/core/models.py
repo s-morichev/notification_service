@@ -1,0 +1,51 @@
+import datetime
+from uuid import UUID
+
+import orjson
+from pydantic import BaseModel, Field
+
+
+def orjson_dumps(v, *, default):
+    # orjson.dumps возвращает bytes, а pydantic требует unicode, поэтому декодируем
+    return orjson.dumps(v, default=default).decode()
+
+
+class CoreModel(BaseModel):
+    class Config:
+        # Заменяем стандартную работу с json на более быструю
+        json_loads = orjson.loads
+        json_dumps = orjson_dumps
+        # позволит использовать в названии полей псевдонимы
+        allow_population_by_field_name = True
+
+
+class Notice(CoreModel):
+    x_request_id: str | None  # для трассировки сообщений
+    notice_id: UUID  # id сообщения
+    users: list[UUID]  # список на рассылку, может быть 1
+    template_id: str  # шаблон сообщения
+    extra: dict = Field(default_factory=dict)  # дополнительные поля для сообщения
+    transport: str  # транспорт - 'mail', 'sms', 'ws', 'push',....
+    msg_type: str  # 'info', 'promo', ....
+    priority: int = 0  #
+    expire_at: datetime.datetime  #
+
+
+class Message(CoreModel):
+    x_request_id: str | None  # для трассировки сообщений
+    notice_id: UUID  #
+    msg_id: UUID  #
+    user_id: UUID  #
+    user_tz: int  #
+    msg_meta: dict  #
+    msg_body: str  #
+    expire_at: datetime.datetime  #
+
+
+class UserInfo(CoreModel):
+    user_id: UUID
+    email: str | None
+    phone: str | None
+    username: str
+    time_zone: str = "UTC"
+    reject_notice: list[str] = Field(default_factory=list)
