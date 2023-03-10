@@ -48,5 +48,5 @@ def logout_all(user_id: UUID):
     auth_srv.close_all_user_sessions(user_id)
 
 
-def get_users_info(user_ids: list[dict]):
+def get_users_info(user_ids: list[UUID]):
     return [userinfo.dict() for userinfo in users.users_info(user_ids)]
