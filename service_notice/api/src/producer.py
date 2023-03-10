@@ -1,7 +1,7 @@
 import logging
 import json
 from abc import abstractmethod, ABC
-
+from fastapi.encoders import jsonable_encoder
 import backoff as backoff
 from aio_pika import connect, Message
 from aiormq import AMQPConnectionError
@@ -36,10 +36,12 @@ class RabbitMQ(BaseProducer):
             raise e
 
     async def publish(self, queue_name: str, message: dict) -> str:
+        encoded_message = jsonable_encoder(message)
+
         channel = await self.connection.channel()
         queue = await channel.declare_queue(queue_name, durable=True)
 
         await channel.default_exchange.publish(
-            Message(body=json.dumps(message).encode('utf-8')),
+            Message(body=json.dumps(encoded_message).encode('utf-8')),
             routing_key=queue.name)
         return "Message sent"

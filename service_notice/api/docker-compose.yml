@@ -14,3 +14,14 @@ services:
       interval: 15s
       timeout: 2s
       retries: 15
+
+  jaeger_agent:
+    image: jaegertracing/all-in-one:1.41
+    container_name: jaeger
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
+#TODO: Выпилить docker-compose отсюда, когда будем собирать все в один проект
