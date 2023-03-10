@@ -56,7 +56,7 @@ def validate_uuids(*args: str) -> None:
         try:
             UUID(id_)
         except ValueError:
-            raise AuthServiceError(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="Invalid UUID")
+            raise AuthServiceError(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=f"Invalid UUID value {id_}")
 
 
 def error(msg: str, code: int) -> None:

@@ -49,17 +49,17 @@ def init_cli(app: Flask):
                 pass
         click.echo("Roles inserted")
 
-    @app.cli.command("insert-users")
-    def insert_users():
+    @app.cli.command("insert-fake-users")
+    def insert_fake_users():
         """Add users and admin for development."""
-        for user_email in ("example1", "example2", "example3", "admin"):
+        for username in ("example1", "example2", "example3", "admin"):
             try:
-                user_service.add_user(user_email, "password", user_email)
+                user_service.add_user(f"{username}@example.com", "password", username)
             except AuthServiceError:
                 pass
         click.echo("Users added")
 
-        admin = Users().user_by_login("admin")
+        admin = Users().user_by_login("admin@example.com")
         admin_role = Roles().get_role_by_name("admin")
         role_service.add_user_role(admin.id, admin_role.id)
 
