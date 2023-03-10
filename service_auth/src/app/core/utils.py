@@ -51,6 +51,28 @@ def jwt_accept_roles(roles_list: str | list[str]):
     return decorator
 
 
+def secret_key_required(secret_key: str):
+    """
+    Требует secret_key в заголовках Authorization
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            nonlocal secret_key
+            if secret_key is None:
+                secret_key = current_app.secret_key
+
+            header_secret_key = request.headers.get('Authorization', '')
+            if header_secret_key != secret_key:
+                raise NoAuthorizationError(f"Invalid secret key")
+
+            rv = f(*args, **kwargs)
+            return rv
+        return decorated_function
+    return decorator
+
+
 def validate_uuids(*args: str) -> None:
     for id_ in args:
         try:
