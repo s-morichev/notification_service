@@ -76,7 +76,7 @@ def secret_key_required(secret_key: str):
 def validate_uuids(*args: str) -> None:
     for id_ in args:
         try:
-            UUID(id_)
+            UUID(str(id_))
         except ValueError:
             raise AuthServiceError(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=f"Invalid UUID value {id_}")
 
