@@ -46,3 +46,7 @@ def get_user_history(user_id: UUID, days_limit=30) -> list[dict]:
 
 def logout_all(user_id: UUID):
     auth_srv.close_all_user_sessions(user_id)
+
+
+def get_users_info(user_ids: list[UUID]):
+    return users.users_info(user_ids)
