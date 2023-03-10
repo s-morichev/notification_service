@@ -53,7 +53,7 @@ class UserInfo(BaseModel):
             email=db_user.email,
             phone=db_user.phone,
             username=db_user.username,
-            reject_notice=db_user.reject_notice,
+            reject_notice=db_user.reject_notice or [],
         )
 
 
