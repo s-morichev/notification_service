@@ -1,8 +1,8 @@
 import json
-from uuid import UUID
 from enum import Enum
+from uuid import UUID
 
-from flask import current_app, jsonify, redirect, request, url_for, Response
+from flask import Response, current_app, jsonify, redirect, request, url_for
 from flask_jwt_extended import set_access_cookies, set_refresh_cookies
 from rauth import OAuth2Service
 
@@ -215,7 +215,6 @@ class VKSignIn(OAuthSignIn):
         )
 
     def callback(self) -> tuple[str | None, str | None, str | None]:
-
         if "code" not in request.args:
             return None, None, None
 

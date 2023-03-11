@@ -38,6 +38,25 @@ class Role(BaseModel):
         return cls(id=db_role.id, name=db_role.name)
 
 
+class UserInfo(BaseModel):
+    user_id: UserID
+    email: str | None
+    phone: str | None
+    username: str
+    time_zone: str = "UTC"
+    reject_notice: list[str]
+
+    @classmethod
+    def from_db(cls, db_user: data.User):
+        return cls(
+            user_id=db_user.id,
+            email=db_user.email,
+            phone=db_user.phone,
+            username=db_user.username,
+            reject_notice=db_user.reject_notice or [],
+        )
+
+
 class User(BaseModel):
     id: UserID
     login: str
@@ -149,6 +168,10 @@ class AbstractUsers(ABC):
 
     @abstractmethod
     def user_by_id(self, user_id: UserID) -> User | None:
+        pass
+
+    @abstractmethod
+    def users_info(self, user_ids: list[UserID]) -> list[UserInfo]:
         pass
 
 
@@ -321,6 +344,10 @@ class Users(AbstractUsers):
             return None
 
         return User.from_db(db_user)
+
+    def users_info(self, user_ids: list[UserID]) -> list[UserInfo]:
+        db_users = data.User.query.filter(data.User.id.in_(user_ids))
+        return [UserInfo.from_db(db_user) for db_user in db_users]
 
 
 class Roles(AbstractRoles):

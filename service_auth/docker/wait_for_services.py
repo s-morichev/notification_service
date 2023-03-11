@@ -1,9 +1,8 @@
 import logging.config
 import os
 
-from psycopg2 import OperationalError, connect
-
 import backoff
+from psycopg2 import OperationalError, connect
 from redis import Redis, RedisError
 
 PG_URI = os.getenv("PG_AUTH_DSN")

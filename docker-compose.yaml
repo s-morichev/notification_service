@@ -82,6 +82,18 @@ services:
       - POSTGRES_PASSWORD=${PG_NOTICE_PASSWORD}
       - POSTGRES_DB=${PG_NOTICE_DB_NAME}
 
+  email_sender:
+    build:
+      context: service_notice/email_sender
+      dockerfile: ./Dockerfile
+    container_name: email_sender
+    volumes:
+      - ./service_notice/email_sender/src/:/opt/app/
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq_notice
+
 volumes:
   postgres_auth_data:
   redis_auth_data:

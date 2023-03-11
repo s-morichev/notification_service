@@ -1,6 +1,0 @@
-sqlalchemy
-psycopg2-binary
-flask
-flask_sqlalchemy
-flask-jwt-extended
-redis
