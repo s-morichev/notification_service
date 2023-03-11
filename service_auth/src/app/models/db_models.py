@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import backref, relationship
 
 from app.flask_db import db
@@ -50,6 +50,8 @@ class User(db.Model):
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(128), nullable=False)
     username = Column(String(255))
+    phone = Column(String(50))
+    reject_notice = Column(JSONB, default=list)
     registered_on = Column(DateTime(timezone=True), default=now_with_tz_info, nullable=False)
     # subscribe_expiration
     is_confirmed = Column(Boolean, default=False)
