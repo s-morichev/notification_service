@@ -48,21 +48,18 @@ services:
       - POSTGRES_DB=${PG_AUTH_DB_NAME}
 
   rabbitmq_notice:
-    image: rabbitmq:3.11.9-management
+    image: rabbitmq:3.11-management
     container_name: rabbitmq_notice
-    hostname: rabbitmq
     restart: always
+    ports:
+      - "${RABBITMQ_NOTICE_PORT}:5672"
+      - "${RABBITMQ_NOTICE_UI_PORT}:15672"
     environment:
-      # set from env!
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=123qwe
-      # disk free limit - when rabbit stop write to disk
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_NOTICE_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_NOTICE_PASSWORD}
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
     volumes:
       - rabbitmq_notice_data:/var/lib/rabbitmq
-    ports:
-      - 15672:15672
-      - 5672:5672
 
   redis_notice:
     image: redis:7.0.5-alpine
