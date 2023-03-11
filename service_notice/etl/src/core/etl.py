@@ -49,11 +49,11 @@ def is_processed(notice_id: uuid.UUID, user_id: uuid.UUID | int) -> bool:
 class Extractor:
     def __init__(self, rmq: RabbitMQ):
         self.channel = rmq.connection.channel()
-        # self.channel.basic_qos(prefetch_size=1, prefetch_count=1)
+        self.channel.basic_qos(prefetch_count=1)
         self.current_delivery_tag = None
 
     def get_data(self):
-        method_frame, header_frame, body = self.channel.basic_get(QUEUE_NOTICE)
+        method_frame, header_frame, body = self.channel.basic_get(QUEUE_NOTICE, auto_ack=False)
         if method_frame:
             nl = "\n"
             logging.debug(f"extract: {nl} method:{method_frame},{nl} header:{header_frame},{nl} body:{body}")
@@ -144,8 +144,11 @@ class Loader:
         self.channel = rmq.connection.channel()
 
     def send_message(self, queue: str, msg: Message, ttl: int):
-        properties = pika.BasicProperties(expiration=str(ttl * 1000))
-        self.channel.basic_publish(exchange="", routing_key=queue, properties=properties, body=msg.json())
+        properties = pika.BasicProperties(expiration=str(ttl * 1000), delivery_mode=2)
+        self.channel.basic_publish(exchange="",
+                                   routing_key=queue,
+                                   properties=properties,
+                                   body=msg.json())
 
     def load(self, data):
         for transport, msg in data:
