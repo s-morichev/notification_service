@@ -1,24 +1,25 @@
 import logging
 
-import db.rmq as db_rmq
 import db.pg as db_pg
+import db.rmq as db_rmq
 import db.storage as db_redis
-from core.dummy import fake_data
 from core import logging_config  # noqa
-from core.etl import ETL
 from core.config import settings
+from core.dummy import fake_data
+from core.etl import ETL
 from core.tracer import init_tracer
 
 
 def set_quit_signal(callback):
     """Ловим сигналы на закрытие"""
     import signal
+
     for sig in ("TERM", "HUP", "INT"):
         signal.signal(getattr(signal, "SIG" + sig), callback)
 
 
 def init_db():
-    logging.info('Init DB...')
+    logging.info("Init DB...")
     db_rmq.db = db_rmq.RabbitMQ(settings.RABBITMQ_URI)
     db_pg.db = db_pg.PostgresDB(settings.PG_URI)
     db_redis.db = db_redis.Storage(settings.REDIS_URI)
@@ -42,14 +43,14 @@ def main():
     def on_quit(sig_no: int, *args):
         etl.stop()
 
-    logging.info('start notice etl')
+    logging.info("start notice etl")
     etl = ETL(db_rmq.db)
     set_quit_signal(on_quit)
     etl.run()
-    logging.info('stop notice etl')
+    logging.info("stop notice etl")
 
     close_db()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

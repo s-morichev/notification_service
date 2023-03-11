@@ -20,6 +20,3 @@ class RabbitMQ:
 
 
 db: RabbitMQ | None = None
-
-
-

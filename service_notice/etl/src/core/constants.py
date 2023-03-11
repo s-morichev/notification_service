@@ -1,6 +1,6 @@
 from enum import Enum
 
-QUEUE_NOTICE = 'notice'
+QUEUE_NOTICE = "notice"
 
 
 class Mark(Enum):
@@ -11,7 +11,7 @@ class Mark(Enum):
 
 
 class Transport(str, Enum):
-    EMAIL = 'email'
-    SMS = 'sms'
-    WEBSOCKET = 'ws'
-    PUSH = 'push'
+    EMAIL = "email"
+    SMS = "sms"
+    WEBSOCKET = "ws"
+    PUSH = "push"

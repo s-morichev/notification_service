@@ -1,5 +1,5 @@
-from uuid import UUID
 import logging
+from uuid import UUID
 
 import redis
 
@@ -10,16 +10,16 @@ class Storage:
     redis: redis.Redis
 
     def __init__(self, uri: str):
-        logging.debug('start Redis')
+        logging.debug("start Redis")
         self.redis = redis.from_url(uri)
 
     @staticmethod
     def mark_key(notice_id: UUID, user_id: UUID) -> str:
-        """ определяет ключ для хранения """
+        """определяет ключ для хранения"""
         return f"notice:{notice_id}:user:{user_id}"
 
     def mark_processed(self, notice_id: UUID, user_id: UUID, result=Mark.QUEUED, ttl=24 * 60 * 60):
-        """ Помечаем сообщение для пользователя как обработанное"""
+        """Помечаем сообщение для пользователя как обработанное"""
         key = self.mark_key(notice_id, user_id)
         self.redis.set(key, result.value, ex=ttl)
         logging.debug("marked notice:{0} user:{1} mark:{2}".format(notice_id, user_id, result.name))
@@ -37,7 +37,7 @@ class Storage:
     def close(self):
         if self.redis:
             self.redis.close()
-            logging.debug('close Redis')
+            logging.debug("close Redis")
 
 
 db: Storage | None = None
@@ -53,4 +53,3 @@ def get_mark(notice_id: UUID, user_id: UUID) -> Mark | None:
         return db.get_mark(notice_id, user_id)
     else:
         return None
-

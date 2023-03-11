@@ -7,7 +7,7 @@ ENV_FILE = BASE_DIR.parent / ".env.local"
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = 'notice service:etl'
+    PROJECT_NAME: str = "notice service:etl"
     PG_URI: str = Field(..., env="NOTICE_ETL_PG_URI")
     AUTH_SERVICE_URI: str = Field(..., env="NOTICE_ETL_AUTH_SERVICE_URI")
     REDIS_URI: str = Field(..., env="NOTICE_ETL_REDIS_URI")

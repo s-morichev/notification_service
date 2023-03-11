@@ -7,13 +7,13 @@ import pika
 from jinja2 import Template
 from opentelemetry import trace
 
+from core.constants import QUEUE_NOTICE, Mark, Transport
 from core.models import Message, Notice, UserInfo
-from core.constants import Mark, QUEUE_NOTICE, Transport
 from core.utils import get_ttl_from_datetime
-from db.rmq import RabbitMQ
-from db.pg import get_template_from_db
-from db.storage import get_mark, set_mark
 from db.auth_api import get_user_info_from_auth
+from db.pg import get_template_from_db
+from db.rmq import RabbitMQ
+from db.storage import get_mark, set_mark
 
 # глушим вывод модуля rabbitmq, иначе он спамит в режиме debug
 logging.getLogger("pika").setLevel(logging.WARNING)
@@ -38,7 +38,7 @@ def get_user_info(request_id: str, user_id: uuid.UUID) -> UserInfo | None:
 
 def mark_processed(notice_id: uuid.UUID, user_id: uuid.UUID | int, result=Mark.QUEUED, ttl=24 * 60 * 60):
     # добавляем к ttl 1мин чтобы гонок не было и если есть сообщение - в редис точно была отметка
-    set_mark(notice_id, user_id, result, ttl+60)
+    set_mark(notice_id, user_id, result, ttl + 60)
 
 
 def is_processed(notice_id: uuid.UUID, user_id: uuid.UUID | int) -> bool:
@@ -73,11 +73,11 @@ class Transformer:
             case Transport.EMAIL:
                 if user_info.email:
                     # TODO надо бы придумать где тему письма получать
-                    return {'email': user_info.email, 'subject': 'Movies Notice'}
+                    return {"email": user_info.email, "subject": "Movies Notice"}
 
             case Transport.SMS:
                 if user_info.phone:
-                    return {'phone': user_info.phone}
+                    return {"phone": user_info.phone}
 
             case Transport.WEBSOCKET:
                 # без понятия что нужно для сокетов. наверное только user_id, но он есть в сообщении
@@ -87,9 +87,9 @@ class Transformer:
         return None
 
     def transform(self, data: Notice):
-        with tracer.start_as_current_span('etl_transform') as span:
-            span.set_attribute('http.request_id', data.x_request_id)
-            span.set_attribute('transport', data.transport)
+        with tracer.start_as_current_span("etl_transform") as span:
+            span.set_attribute("http.request_id", data.x_request_id)
+            span.set_attribute("transport", data.transport)
 
             template = get_template(data.template_id)
             notice_id = data.notice_id
@@ -102,7 +102,7 @@ class Transformer:
             for user in data.users:
                 # если это повтор - проверяем на обработку конкретного пользователя
                 if is_repeat and is_processed(notice_id, user):
-                    logging.debug('msg rejected: notice_id:{0} user_id:{1}'.format(notice_id, user))
+                    logging.debug("msg rejected: notice_id:{0} user_id:{1}".format(notice_id, user))
                     continue
 
                 user_info = get_user_info(data.x_request_id, user)
@@ -145,17 +145,14 @@ class Loader:
 
     def send_message(self, queue: str, msg: Message, ttl: int):
         properties = pika.BasicProperties(expiration=str(ttl * 1000), delivery_mode=2)
-        self.channel.basic_publish(exchange="",
-                                   routing_key=queue,
-                                   properties=properties,
-                                   body=msg.json())
+        self.channel.basic_publish(exchange="", routing_key=queue, properties=properties, body=msg.json())
 
     def load(self, data):
         for transport, msg in data:
-            with tracer.start_as_current_span('etl_load') as span:
+            with tracer.start_as_current_span("etl_load") as span:
                 # делаем трассировку
-                span.set_attribute('http.request_id', msg.x_request_id)
-                span.set_attribute('transport', transport)
+                span.set_attribute("http.request_id", msg.x_request_id)
+                span.set_attribute("transport", transport)
 
                 # ставим в очередь на отправку
                 sender_queue = transport

@@ -20,7 +20,7 @@ class PostgresDB:
         self.connection: PGConnection = psycopg2.connect(uri, cursor_factory=DictCursor)
         with self.connection.cursor() as cursor:
             cursor.execute(INIT_QUERY)
-            logging.debug('init tables')
+            logging.debug("init tables")
         self.connection.commit()
 
     def execute_query(self, query: str) -> list[tuple]:
@@ -44,4 +44,4 @@ def get_template_from_db(template_id: str) -> str:
     if result:
         return result[0][0]
     else:
-        return ''
+        return ""
