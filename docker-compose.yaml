@@ -66,15 +66,28 @@ services:
 
   redis_notice:
     image: redis:7.0.5-alpine
-    container_name: redis_auth
+    container_name: redis_notice
     command: redis-server --requirepass ${REDIS_NOTICE_PASSWORD} --save 20 1
     volumes:
       - redis_notice_data:/data
     ports:
       - "${REDIS_NOTICE_PORT}:6379"
 
+  postgres_notice:
+    image: postgres:15.1-alpine
+    container_name: postgres_notice
+    volumes:
+      - postgres_notice_data:/var/lib/postgresql/data/
+    ports:
+      - "${PG_NOTICE_PORT}:5432"
+    environment:
+      - POSTGRES_USER=${PG_NOTICE_USER}
+      - POSTGRES_PASSWORD=${PG_NOTICE_PASSWORD}
+      - POSTGRES_DB=${PG_NOTICE_DB_NAME}
+
 volumes:
   postgres_auth_data:
   redis_auth_data:
   rabbitmq_notice_data:
   redis_notice_data:
+  postgres_notice_data:
