@@ -36,7 +36,7 @@ class Message(CoreModel):
     notice_id: UUID  #
     msg_id: UUID  #
     user_id: UUID  #
-    user_tz: int  #
+    user_tz: str  #
     msg_meta: dict  #
     msg_body: str  #
     expire_at: datetime.datetime  #

@@ -131,7 +131,7 @@ class Transformer:
                     notice_id=data.notice_id,
                     msg_id=uuid.uuid4(),
                     user_id=user,
-                    user_tz=0,
+                    user_tz=user_info.time_zone,
                     msg_meta=msg_meta,
                     msg_body=msg_body,
                     expire_at=data.expire_at,
@@ -146,6 +146,7 @@ class Loader:
     def send_message(self, queue: str, msg: Message, ttl: int):
         properties = pika.BasicProperties(expiration=str(ttl * 1000), delivery_mode=2)
         self.channel.basic_publish(exchange="", routing_key=queue, properties=properties, body=msg.json())
+        logging.debug("message loaded in [{1}]: {0}".format(msg.dict(), queue))
 
     def load(self, data):
         for transport, msg in data:
@@ -161,7 +162,6 @@ class Loader:
 
                 # помечаем как обработанное
                 mark_processed(msg.notice_id, msg.user_id, Mark.QUEUED, ttl)
-                logging.debug("message loaded: {0}".format(msg.dict()))
 
 
 class ETL:
