@@ -6,6 +6,8 @@ import backoff as backoff
 from aio_pika import connect, Message
 from aiormq import AMQPConnectionError
 
+from src.settings import settings
+
 
 class BaseProducer(ABC):
     @abstractmethod
@@ -21,6 +23,7 @@ class RabbitMQ(BaseProducer):
     def __init__(self, dsn):
         self.dsn = dsn
         self.connection = None
+        self.queue = None
 
     @backoff.on_exception(backoff.expo, AMQPConnectionError, max_time=60, raise_on_giveup=True)
     async def connect_broker(self):
@@ -35,13 +38,17 @@ class RabbitMQ(BaseProducer):
             logging.error("error closing connection")
             raise e
 
-    async def publish(self, queue_name: str, message: dict) -> str:
+    async def create_queue(self, ):
+        async with self.connection.channel() as channel:
+            self.queue = await channel.declare_queue(settings.QUEUE_NAME, durable=True)
+            logging.info("queue created")
+
+    async def publish(self, message: dict) -> str:
         encoded_message = jsonable_encoder(message)
-
-        channel = await self.connection.channel()
-        queue = await channel.declare_queue(queue_name, durable=True)
-
-        await channel.default_exchange.publish(
-            Message(body=json.dumps(encoded_message).encode('utf-8')),
-            routing_key=queue.name)
+        if not self.queue:
+            await self.create_queue()
+        async with self.connection.channel() as channel:
+            await channel.default_exchange.publish(
+                Message(body=json.dumps(encoded_message).encode('utf-8')),
+                routing_key=self.queue.name)
         return "Message sent"
