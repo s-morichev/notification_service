@@ -11,15 +11,17 @@ from core.models import Notice
 
 def fake_data(rmq):
     channel = rmq.connection.channel()
+
     channel.queue_declare(queue="notice")
     channel.queue_purge(queue="notice")
     channel.queue_declare(queue="email")
     channel.queue_purge(queue="email")
+
     presents = ["медаль", "премию", "скидку 10%"]
     for i in range(10):
         notice = Notice(
             x_request_id=f'request_{i}',
-            users=[uuid.uuid4() for i in range(random.randint(1, 10))] + [
+            users=[uuid.uuid4(), uuid.UUID(int=0)] + [
                 uuid.UUID("816d9877-7b95-4ba4-af35-8487ab134a66")],
             notice_id=uuid.uuid4(),
             template_id=f"default",
