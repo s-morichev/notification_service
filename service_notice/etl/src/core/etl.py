@@ -9,10 +9,11 @@ from opentelemetry import trace
 
 from core.models import Message, Notice, UserInfo
 from core.constants import Mark, QUEUE_NOTICE, Transport
+from core.utils import get_ttl_from_datetime
 from db.rmq import RabbitMQ
 from db.pg import get_template_from_db
 from db.storage import get_mark, set_mark
-from core.utils import get_ttl_from_datetime
+from db.auth_api import get_user_info_from_auth
 
 # глушим вывод модуля rabbitmq, иначе он спамит в режиме debug
 logging.getLogger("pika").setLevel(logging.WARNING)
@@ -20,23 +21,27 @@ logging.getLogger("pika").setLevel(logging.WARNING)
 tracer = trace.get_tracer(__name__)
 
 
+# TODO завернуть в кэш
 def get_template(template_id: str) -> Template:
     template_str = get_template_from_db(template_id)
     return Template(template_str)
 
 
-def get_user_info(user_id: uuid.UUID) -> UserInfo:
-    return UserInfo(user_id=user_id, email="user@movies.com", username="Jon Doe", phone="5555-4444")
+def get_user_info(request_id: str, user_id: uuid.UUID) -> UserInfo | None:
+    # TODO убрать - это для тестов
+    if user_id == uuid.UUID(int=0):
+        return UserInfo(user_id=user_id, email="user@movies.com", username="Jon Doe", phone="5555-4444")
+
+    result = get_user_info_from_auth(request_id, user_id)
+    return result
 
 
-def mark_processed(notice_id, user_id, result=Mark.QUEUED, ttl=24 * 60 * 60):
-    logging.debug("marked notice:{0} user:{1} mark:{2}".format(notice_id, user_id, result.name))
-
+def mark_processed(notice_id: uuid.UUID, user_id: uuid.UUID | int, result=Mark.QUEUED, ttl=24 * 60 * 60):
     # добавляем к ttl 1мин чтобы гонок не было и если есть сообщение - в редис точно была отметка
     set_mark(notice_id, user_id, result, ttl+60)
 
 
-def is_processed(notice_id, user_id) -> bool:
+def is_processed(notice_id: uuid.UUID, user_id: uuid.UUID | int) -> bool:
     result = get_mark(notice_id, user_id)
     return result is not None
 
@@ -100,7 +105,13 @@ class Transformer:
                     logging.debug('msg rejected: notice_id:{0} user_id:{1}'.format(notice_id, user))
                     continue
 
-                user_info = get_user_info(user)
+                user_info = get_user_info(data.x_request_id, user)
+
+                # пропускаем, если пользователь не найден
+                if user_info is None:
+                    mark_processed(data.notice_id, user, Mark.REJECTED_NODATA, ttl)
+                    continue
+
                 # пропускаем, если пользователь отказался от некоторых рассылок
                 if data.msg_type in user_info.reject_notice:
                     # помечаем сообщение как отвергнутое
@@ -132,7 +143,7 @@ class Loader:
     def __init__(self, rmq: RabbitMQ):
         self.channel = rmq.connection.channel()
 
-    def send_message(self, queue: str, msg: Message, ttl:int):
+    def send_message(self, queue: str, msg: Message, ttl: int):
         properties = pika.BasicProperties(expiration=str(ttl * 1000))
         self.channel.basic_publish(exchange="", routing_key=queue, properties=properties, body=msg.json())
 
@@ -150,7 +161,6 @@ class Loader:
 
                 # помечаем как обработанное
                 mark_processed(msg.notice_id, msg.user_id, Mark.QUEUED, ttl)
-
                 logging.debug("message loaded: {0}".format(msg.dict()))
 
 

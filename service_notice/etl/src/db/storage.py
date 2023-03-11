@@ -15,14 +15,17 @@ class Storage:
 
     @staticmethod
     def mark_key(notice_id: UUID, user_id: UUID) -> str:
+        """ определяет ключ для хранения """
         return f"notice:{notice_id}:user:{user_id}"
 
     def mark_processed(self, notice_id: UUID, user_id: UUID, result=Mark.QUEUED, ttl=24 * 60 * 60):
+        """ Помечаем сообщение для пользователя как обработанное"""
         key = self.mark_key(notice_id, user_id)
         self.redis.set(key, result.value, ex=ttl)
         logging.debug("marked notice:{0} user:{1} mark:{2}".format(notice_id, user_id, result.name))
 
     def get_mark(self, notice_id: UUID, user_id: UUID) -> Mark | None:
+        """Получаем отметку или None если такое сообщение еше не встречалось"""
         key = self.mark_key(notice_id, user_id)
         value = self.redis.get(key)
         if not value:

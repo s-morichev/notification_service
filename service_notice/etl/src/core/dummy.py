@@ -7,6 +7,8 @@ import pika
 from core.models import Notice
 
 
+# TODO Модуль для добавления тестовых данных - убрать в проде !!!!
+
 def fake_data(rmq):
     channel = rmq.connection.channel()
     channel.queue_declare(queue="notice")
@@ -17,7 +19,8 @@ def fake_data(rmq):
     for i in range(10):
         notice = Notice(
             x_request_id=f'request_{i}',
-            users=[uuid.uuid4() for i in range(random.randint(1, 10))],
+            users=[uuid.uuid4() for i in range(random.randint(1, 10))] + [
+                uuid.UUID("816d9877-7b95-4ba4-af35-8487ab134a66")],
             notice_id=uuid.uuid4(),
             template_id=f"default",
             transport="email",
