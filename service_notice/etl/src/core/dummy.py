@@ -21,7 +21,11 @@ def fake_data(rmq):
     for i in range(10):
         notice = Notice(
             x_request_id=f"request_{i}",
-            users=[uuid.uuid4(), uuid.UUID(int=0)] + [uuid.UUID("816d9877-7b95-4ba4-af35-8487ab134a66")],
+            users=[uuid.uuid4(),
+                   uuid.UUID(int=0),
+                   uuid.UUID("816d9877-7b95-4ba4-af35-8487ab134a66"),
+                   uuid.UUID('af7110a5-bd17-4895-bb6e-eacd0b17b5a3')],
+
             notice_id=uuid.uuid4(),
             template_id="default",
             transport="email",
