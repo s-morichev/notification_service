@@ -1,6 +1,7 @@
 import logging
 import time
 import uuid
+import math
 
 import orjson
 import pika
@@ -10,7 +11,7 @@ from opentelemetry import trace
 from core.constants import QUEUE_NOTICE, Mark, Transport
 from core.models import Message, Notice, UserInfo
 from core.utils import get_ttl_from_datetime
-from db.auth_api import get_user_info_from_auth
+from db.auth_api import get_user_info_from_auth, get_users_info_from_auth
 from db.pg import get_template_from_db
 from db.rmq import RabbitMQ
 from db.storage import get_mark, set_mark
@@ -33,6 +34,15 @@ def get_user_info(request_id: str, user_id: uuid.UUID) -> UserInfo | None:
         return UserInfo(user_id=user_id, email="user@movies.com", username="Jon Doe", phone="5555-4444")
 
     result = get_user_info_from_auth(request_id, user_id)
+    return result
+
+
+def get_users_info(request_id: str, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, UserInfo]:
+    result = get_users_info_from_auth(request_id, user_ids)
+
+    # TODO убрать - это для тестов
+    result[uuid.UUID(int=0)] = UserInfo(user_id=uuid.UUID(int=0), email="user@movies.com",
+                                        username="Jon Doe", phone="5555-4444")
     return result
 
 
@@ -87,6 +97,19 @@ class Transformer:
         return None
 
     def transform(self, data: Notice):
+        def user_info_lst(request_id: str, user_lst: list[uuid.UUID], batch_size=100):
+            """
+            Для оптимизации - выполнение запросов пачками к auth
+            Пачка не больше batch_size
+            """
+            window_count = math.ceil(len(user_lst) / batch_size)
+            for window in range(window_count):
+                start = window * batch_size
+                users_batch = user_lst[start:start + batch_size]
+                user_info_dict = get_users_info(request_id, users_batch)
+                # TODO что делать с пользователями без user_info?
+                yield from user_info_dict.values()
+
         with tracer.start_as_current_span("etl_transform") as span:
             span.set_attribute("http.request_id", data.x_request_id)
             span.set_attribute("transport", data.transport)
@@ -96,26 +119,22 @@ class Transformer:
             ttl = get_ttl_from_datetime(data.expire_at)
             # узнаю повторная ли это обработка
             is_repeat = is_processed(notice_id, 0)
+            users = data.users
+
             if not is_repeat:
                 mark_processed(notice_id, 0, ttl=ttl)
+            else:
+                # фильтруем пользователей, оставляя только тех, что еще не обрабатывали.
+                # не очень то оптимально....
+                # с учетом того, что данные отправляются последовательно, можно
+                # в дальнейшем оптимизировать поиск последнего обработанного пользователя
+                users = filter(lambda x: is_processed(notice_id, x), users)
 
-            for user in data.users:
-                # если это повтор - проверяем на обработку конкретного пользователя
-                if is_repeat and is_processed(notice_id, user):
-                    logging.debug("msg rejected: notice_id:{0} user_id:{1}".format(notice_id, user))
-                    continue
-
-                user_info = get_user_info(data.x_request_id, user)
-
-                # пропускаем, если пользователь не найден
-                if user_info is None:
-                    mark_processed(data.notice_id, user, Mark.REJECTED_NODATA, ttl)
-                    continue
-
+            for user_info in user_info_lst(data.x_request_id, users):
                 # пропускаем, если пользователь отказался от некоторых рассылок
                 if data.msg_type in user_info.reject_notice:
                     # помечаем сообщение как отвергнутое
-                    mark_processed(data.notice_id, user, Mark.REJECTED_USER, ttl)
+                    mark_processed(data.notice_id, user_info.user_id, Mark.REJECTED_USER, ttl)
                     continue
 
                 msg_body = template.render(user_info.dict() | data.extra)
@@ -123,42 +142,41 @@ class Transformer:
                 # для случаев, когда не можем отправить сообщение,
                 # потому что не хватает данных для отправки, например телефона
                 if msg_meta is None:
-                    mark_processed(data.notice_id, user, Mark.REJECTED_NODATA, ttl)
+                    mark_processed(data.notice_id, user_info.user_id, Mark.REJECTED_NODATA, ttl)
                     continue
 
                 message = Message(
                     x_request_id=data.x_request_id,
                     notice_id=data.notice_id,
                     msg_id=uuid.uuid4(),
-                    user_id=user,
+                    user_id=user_info.user_id,
                     user_tz=user_info.time_zone,
                     msg_meta=msg_meta,
                     msg_body=msg_body,
                     expire_at=data.expire_at,
                 )
-                yield data.transport, message
+                yield data.transport, data.priority, message
 
 
 class Loader:
     def __init__(self, rmq: RabbitMQ):
         self.channel = rmq.connection.channel()
 
-    def send_message(self, queue: str, msg: Message, ttl: int):
-        properties = pika.BasicProperties(expiration=str(ttl * 1000), delivery_mode=2)
+    def send_message(self, queue: str, msg: Message, ttl: int, priority: int):
+        properties = pika.BasicProperties(expiration=str(ttl * 1000), delivery_mode=2, priority=priority)
         self.channel.basic_publish(exchange="", routing_key=queue, properties=properties, body=msg.json())
         logging.debug("message loaded in [{1}]: {0}".format(msg.dict(), queue))
 
     def load(self, data):
-        for transport, msg in data:
+        for transport, priority, msg in data:
             with tracer.start_as_current_span("etl_load") as span:
                 # делаем трассировку
                 span.set_attribute("http.request_id", msg.x_request_id)
                 span.set_attribute("transport", transport)
 
                 # ставим в очередь на отправку
-                sender_queue = transport
                 ttl = get_ttl_from_datetime(msg.expire_at)
-                self.send_message(sender_queue, msg, ttl)
+                self.send_message(queue=transport, msg=msg, ttl=ttl, priority=priority)
 
                 # помечаем как обработанное
                 mark_processed(msg.notice_id, msg.user_id, Mark.QUEUED, ttl)
