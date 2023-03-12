@@ -9,9 +9,6 @@ class RabbitMQ:
 
         parameters = pika.URLParameters(uri)
         self.connection = pika.BlockingConnection(parameters=parameters)
-        self.channel = self.connection.channel()
-
-        self.channel.queue_declare(queue="notice")
 
     def close(self):
         if self.connection:
