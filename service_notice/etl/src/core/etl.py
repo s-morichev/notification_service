@@ -2,6 +2,7 @@ import logging
 import math
 import time
 import uuid
+from typing import Generator
 
 import orjson
 import pika
@@ -168,7 +169,7 @@ class Loader:
         self.channel.basic_publish(exchange="", routing_key=queue, properties=properties, body=msg.json())
         logging.debug("message loaded in [{1}]: {0}".format(msg.dict(), queue))
 
-    def load(self, data):
+    def load(self, data: Generator[tuple[str, int, Message], None, None]):
         for transport, priority, msg in data:
             with tracer.start_as_current_span("etl_load") as span:
                 # делаем трассировку
