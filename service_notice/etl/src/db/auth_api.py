@@ -34,7 +34,7 @@ def get_user_info_from_auth(request_id: str, user_id: UUID) -> UserInfo | None:
     return None
 
 
-def get_users_info_from_auth(request_id: str, user_ids: list[UUID]) -> dict[UUID, UserInfo] | None:
+def get_users_info_from_auth(request_id: str, user_ids: list[UUID]) -> dict[UUID, UserInfo]:
     auth_srv = settings.AUTH_SERVICE_URI
     path = "/auth/v1/userinfo"
     url = f"http://{auth_srv}{path}"
@@ -55,4 +55,4 @@ def get_users_info_from_auth(request_id: str, user_ids: list[UUID]) -> dict[UUID
                 result = {item['user_id']: UserInfo(**item) for item in users_info}
                 return result
 
-    return None
+    return {}
