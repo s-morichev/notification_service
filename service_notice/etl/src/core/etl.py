@@ -122,7 +122,7 @@ class Transformer:
                 msg_meta = self.get_msg_meta(data, user_info)
                 # для случаев, когда не можем отправить сообщение,
                 # потому что не хватает данных для отправки, например телефона
-                if not msg_meta:
+                if msg_meta is None:
                     mark_processed(data.notice_id, user, Mark.REJECTED_NODATA, ttl)
                     continue
 
