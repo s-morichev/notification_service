@@ -185,9 +185,8 @@ class ETL:
                 continue
 
             transformed_data = self.transformer.transform(data)
-            # если есть что отправить
-            if transformed_data:
-                self.loader.load(transformed_data)
+
+            self.loader.load(transformed_data)
 
             # если в процессе ничего не упало - считаем что задание выполнено
             self.extractor.mark_done()
