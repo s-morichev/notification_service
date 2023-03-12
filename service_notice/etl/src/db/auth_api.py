@@ -21,7 +21,7 @@ def get_user_info_from_auth(request_id: str, user_id: UUID) -> UserInfo | None:
         response = requests.post(url, headers=headers, data=data)
 
     except RequestException as err:
-        logging.error(f'error call auth service. Error: {err}')
+        logging.error(f"error call auth service. Error: {err}")
 
     else:
         if response.status_code == HTTPStatus.OK:
@@ -45,14 +45,14 @@ def get_users_info_from_auth(request_id: str, user_ids: list[UUID]) -> dict[UUID
         response = requests.post(url, headers=headers, data=data)
 
     except RequestException as err:
-        logging.error(f'error call auth service. Error: {err}')
+        logging.error(f"error call auth service. Error: {err}")
 
     else:
         if response.status_code == HTTPStatus.OK:
             data = response.json()
             if data and "users_info" in data:
                 users_info = data["users_info"]
-                result = {item['user_id']: UserInfo(**item) for item in users_info}
+                result = {item["user_id"]: UserInfo(**item) for item in users_info}
                 return result
 
     return {}

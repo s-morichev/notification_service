@@ -1,7 +1,7 @@
 import logging
+import math
 import time
 import uuid
-import math
 
 import orjson
 import pika
@@ -41,8 +41,9 @@ def get_users_info(request_id: str, user_ids: list[uuid.UUID]) -> dict[uuid.UUID
     result = get_users_info_from_auth(request_id, user_ids)
 
     # TODO убрать - это для тестов
-    result[uuid.UUID(int=0)] = UserInfo(user_id=uuid.UUID(int=0), email="user@movies.com",
-                                        username="Jon Doe", phone="5555-4444")
+    result[uuid.UUID(int=0)] = UserInfo(
+        user_id=uuid.UUID(int=0), email="user@movies.com", username="Jon Doe", phone="5555-4444"
+    )
     return result
 
 
@@ -105,7 +106,7 @@ class Transformer:
             window_count = math.ceil(len(user_lst) / batch_size)
             for window in range(window_count):
                 start = window * batch_size
-                users_batch = user_lst[start:start + batch_size]
+                users_batch = user_lst[start: start + batch_size]
                 user_info_dict = get_users_info(request_id, users_batch)
                 # TODO что делать с пользователями без user_info?
                 yield from user_info_dict.values()
