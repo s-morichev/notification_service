@@ -94,6 +94,18 @@ services:
     depends_on:
       - rabbitmq_notice
 
+  etl_notice:
+    build:
+      context: service_notice/etl
+      dockerfile: ./docker/Dockerfile
+    container_name: etl_notice
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq_notice
+      - postgres_notice
+      - redis_notice
+
 volumes:
   postgres_auth_data:
   redis_auth_data:
