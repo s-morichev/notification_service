@@ -32,6 +32,7 @@ def fake_data(rmq):
             transport="email",
             msg_type="promo",
             extra={"present": random.choice(presents)},
+            priority=10-i,
             expire_at=datetime.now(tz=timezone.utc) + timedelta(hours=2),
         )
         ttl = int((notice.expire_at - datetime.now(tz=timezone.utc)).total_seconds())
