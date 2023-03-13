@@ -20,6 +20,7 @@ def set_quit_signal(callback):
 
 def init_db():
     logging.info("Init DB...")
+    # все подключения под backoff в классах
     db_rmq.db = db_rmq.RabbitMQ(settings.RABBITMQ_URI)
     db_pg.db = db_pg.PostgresDB(settings.PG_URI)
     db_redis.db = db_redis.Storage(settings.REDIS_URI)

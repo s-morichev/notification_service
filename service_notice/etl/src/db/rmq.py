@@ -1,9 +1,12 @@
 import logging
 
 import pika
+from pika.exceptions import AMQPConnectionError
+import backoff
 
 
 class RabbitMQ:
+    @backoff.on_exception(backoff.expo, AMQPConnectionError, max_time=60)
     def __init__(self, uri: str):
         logging.debug("start rabbitmq")
 
