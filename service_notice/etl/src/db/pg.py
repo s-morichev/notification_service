@@ -3,6 +3,7 @@ import logging
 import psycopg2
 from psycopg2.extensions import connection as PGConnection
 from psycopg2.extras import DictCursor
+import backoff
 
 INIT_QUERY = """
 CREATE TABLE IF NOT EXISTS template (
@@ -15,6 +16,7 @@ ON CONFLICT (id) DO UPDATE
 
 
 class PostgresDB:
+    @backoff.on_exception(backoff.expo, psycopg2.OperationalError, max_time=60)
     def __init__(self, uri: str):
         logging.debug("start PostgreSQL")
         self.connection: PGConnection = psycopg2.connect(uri, cursor_factory=DictCursor)
