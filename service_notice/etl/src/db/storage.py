@@ -2,6 +2,8 @@ import logging
 from uuid import UUID
 
 import redis
+from redis.exceptions import ConnectionError
+import backoff
 
 from core.constants import Mark
 
@@ -9,9 +11,11 @@ from core.constants import Mark
 class Storage:
     redis: redis.Redis
 
+    @backoff.on_exception(backoff.expo, ConnectionError, max_time=60)
     def __init__(self, uri: str):
         logging.debug("start Redis")
         self.redis = redis.from_url(uri)
+        self.redis.ping()
 
     @staticmethod
     def mark_key(notice_id: UUID, user_id: UUID) -> str:
