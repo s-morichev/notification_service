@@ -8,8 +8,10 @@ ENV_FILE = BASE_DIR.parent / ".env.local"
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "notice service:etl"
+
     PG_URI: str = Field(..., env="NOTICE_ETL_PG_URI")
     AUTH_SERVICE_URI: str = Field(..., env="NOTICE_ETL_AUTH_SERVICE_URI")
+    AUTH_API_PATH: str = "/auth/v1/userinfo"
     REDIS_URI: str = Field(..., env="NOTICE_ETL_REDIS_URI")
     RABBITMQ_URI: str = Field(..., env="NOTICE_ETL_RABBITMQ_URI")
     DEBUG: bool = Field(True, env="NOTICE_ETL_DEBUG")

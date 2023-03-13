@@ -12,7 +12,7 @@ from core.models import UserInfo
 
 def get_user_info_from_auth(request_id: str, user_id: UUID) -> UserInfo | None:
     auth_srv = settings.AUTH_SERVICE_URI
-    path = "/auth/v1/userinfo"
+    path = settings.AUTH_API_PATH
     url = f"http://{auth_srv}{path}"
     data = orjson.dumps({"user_ids": [user_id]})
     headers = {"Authorization": settings.SECRET_KEY, "X-Request-Id": request_id, "Content-Type": "application/json"}
