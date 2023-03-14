@@ -40,8 +40,20 @@ services:
       - redis_notifications
       - postgres_notifications
 
+  task_worker:
+      container_name: task_worker
+      build: .
+      command: ./scripts/run_celery.sh
+      volumes:
+        - worker_celery_data:/data
+      restart: always
+      depends_on:
+        - admin_notifications
+        - redis_notifications
+        - postgres_notifications
 
 volumes:
   postgres_notifications_data:
   redis_notifications_data:
   admin_notifications_data:
+  worker_celery_data:

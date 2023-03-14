@@ -6,9 +6,10 @@ WORKDIR /opt/app
 ENV PYTHONUNBUFFERED 1
 
 COPY requirements.txt requirements.txt
-COPY uwsgi/uwsgi.ini uwsgi.ini
 
 RUN  pip install --upgrade pip \
      && pip install -r requirements.txt
 
 COPY . .
+
+RUN chmod a+x ./scripts/run_celery.sh
