@@ -16,10 +16,16 @@ class UUIDTimeStampedMixin(models.Model):
         abstract = True
 
 
-class NotificationType(models.TextChoices):
+class NotificationTransport(models.TextChoices):
     EMAIL = 'email'
     PUSH = 'push'
     SMS = 'sms'
+
+
+class NotificationType(models.TextChoices):
+    INFO = 'info'
+    PROMO = 'promo'
+    BONUS = 'bonus'
 
 
 class Template(UUIDTimeStampedMixin, models.Model):
@@ -56,13 +62,19 @@ class Notification(UUIDTimeStampedMixin, models.Model):
         help_text=_('Recipients UUIDs. For example: 74f4c5ff-2432-4594-ae49-2f9f48f274ed,'
                     ' 2b2a5654-7dd3-4ea4-ae19-0d9a4a7999ba'), verbose_name=_('Recipients'))
     template = models.ForeignKey(Template, on_delete=models.PROTECT, verbose_name=_('Template'))
-    type = models.CharField(
-        _('Type'), max_length=50,
-        choices=NotificationType.choices
+    transport = models.CharField(
+        _('Method of sending'), max_length=50,
+        choices=NotificationTransport.choices
     )
     scheduled_time = models.DateTimeField(_("Time of sending"), blank=True, null=True)
     send_now = models.BooleanField(_("Send now"), default=False,
                                    help_text=_("Used only if scheduled_time is not selected"))
+    type = models.CharField(
+        _('Type'),
+        max_length=50,
+        choices=NotificationType.choices,
+        default=NotificationType.INFO,
+    )
     status = models.CharField(
         _('Status'),
         max_length=50,

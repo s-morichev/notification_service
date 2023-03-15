@@ -23,14 +23,14 @@ def generate_message_for_sending(notification):
         except Exception as error:
             logger.error(f'During converting user_id {id} to UUID error occurred - {error}')
             continue
-    message = Message(x_request_id=None,
+    message = Message(x_request_id=uuid.uuid4(),
                       notice_id=notification.id,
                       users_id=users,
                       template_id=notification.template_id,
                       extra={},
-                      transport=notification.type,
+                      transport=notification.transport,
                       priority=priority,
-                      msg_type=None,
+                      msg_type=notification.type,
                       expire_at=expire_at)
     return message
 
