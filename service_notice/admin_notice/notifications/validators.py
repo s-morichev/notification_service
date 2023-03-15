@@ -8,7 +8,7 @@ def validate_uuid(user_ids):
     for id in user_ids:
         try:
             uuid.UUID(id)
-        except Exception:
+        except ValueError:
             raise ValidationError(
                 _('%(id)s is not UUID'),
                 params={'id': id},

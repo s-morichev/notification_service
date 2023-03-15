@@ -3,13 +3,13 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get('DJANGO_ADMIN_NOTICE_SECRET_KEY')
 
 LOCALE_PATHS = ['notifications/locale']
 
-DEBUG = os.environ.get('DEBUG', False) == 'True'
+DEBUG = os.environ.get('DJANGO_ADMIN_NOTICE_DEBUG', False) == 'True'
 
-ALLOWED_HOSTS = [os.environ.get('HOST')]
+ALLOWED_HOSTS = [os.environ.get('DJANGO_ADMIN_NOTICE_HOST')]
 
 INSTALLED_APPS = [
     'debug_toolbar',
@@ -80,6 +80,17 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+if DEBUG:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static')
+    ]
+
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 INTERNAL_IPS = [
@@ -114,14 +125,14 @@ LOGGING = {
     },
 }
 
-REDIS_HOST = os.environ.get('REDIS_HOST')
-REDIS_PORT = os.environ.get('REDIS_PORT')
+REDIS_HOST = os.environ.get('REDIS_ADMIN_NOTICE_HOST')
+REDIS_PORT = os.environ.get('REDIS_ADMIN_NOTICE_PORT')
 CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
-CELERY_BROKER_TRANSPORT_OPTIONS = {'visability_timeout': 3600}
+CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
 CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_IMPORTS = ('notifications.tasks',)
 
-AUTH_API_URL = os.environ.get('AUTH_API_URL')
+AUTH_API_URL = os.environ.get('ADMIN_NOTICE_AUTH_API_URL')

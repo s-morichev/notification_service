@@ -1,14 +1,13 @@
-# base image
 FROM python:3.10
 
-WORKDIR /opt/app
-# options
+WORKDIR /code
+
 ENV PYTHONUNBUFFERED 1
 
 COPY requirements.txt requirements.txt
 
 RUN  pip install --upgrade pip \
-     && pip install -r requirements.txt
+     && pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 

@@ -17,12 +17,13 @@ def generate_message_for_sending(notification):
         expire_at = notification.scheduled_time + timedelta(days=1)
         priority = 0
     users = []
-    for id in notification.users_ids:
-        try:
-            users.append(uuid.UUID(id))
-        except Exception as error:
-            logger.error(f'During converting user_id {id} to UUID error occurred - {error}')
-            continue
+    if notification.users_ids is not None:
+        for id in notification.users_ids:
+            try:
+                users.append(uuid.UUID(id))
+            except Exception as error:
+                logger.error(f'During converting user_id {id} to UUID error occurred - {error}')
+                continue
     message = Message(x_request_id=uuid.uuid4(),
                       notice_id=notification.id,
                       users_id=users,

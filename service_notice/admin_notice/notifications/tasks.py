@@ -16,7 +16,6 @@ def send_notifications():
     for notification in notifications:
         try:
             message = generate_message_for_sending(notification)
-            print(message)
         except Exception as error:
             logger.debug(f'Generating message for notification with'
                          f' UUID {notification.id} failed, error occurred - {error}')
@@ -24,6 +23,9 @@ def send_notifications():
         else:
             try:
                 response = send_message(message)
+            except Exception as error:
+                logger.debug(f'During sending message to API the error occurred - {error}')
+            else:
                 if response.status_code == HTTPStatus.OK:
                     notification.status = 'done'
                     logger.debug(f'Notification with UUID {notification.id} was successfully sent to API')
@@ -33,5 +35,3 @@ def send_notifications():
                                  f' not sent to API. Response from API - {response.status_code}.'
                                  f' Response - {response.text}')
                 notification.save()
-            except Exception as error:
-                logger.debug(f'During sending message to API the error occurred - {error}')

@@ -20,6 +20,7 @@ class NotificationTransport(models.TextChoices):
     EMAIL = 'email'
     PUSH = 'push'
     SMS = 'sms'
+    WEBSOCKET = 'websocket'
 
 
 class NotificationType(models.TextChoices):
