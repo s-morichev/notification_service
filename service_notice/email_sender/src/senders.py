@@ -5,17 +5,18 @@ from http import HTTPStatus
 
 import sendgrid
 from python_http_client.exceptions import HTTPError
-from sendgrid.helpers.mail import From, HtmlContent, Mail, Subject, To
+from sendgrid.helpers.mail import From, HtmlContent, Mail, SendAt, Subject, To
 
 from config import settings
 from models import EmailNotification
+from utils import get_send_datetime
 
 logger = logging.getLogger(__name__)
 
 
 class BaseSender:
     @abstractmethod
-    def send(self, notice: EmailNotification) -> EmailNotification | None:
+    def send(self, notice: EmailNotification, priority: int) -> EmailNotification | None:
         """Отпрравляет уведомление по email.
 
         В случае ошибок возвращает само уведомление для повторной отправки.
@@ -36,13 +37,17 @@ class SendgridSender(BaseSender):
     def __init__(self):
         self.sendgrid_client = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
 
-    def send(self, notice: EmailNotification) -> EmailNotification | None:
+    def send(self, notice: EmailNotification, priority: int) -> EmailNotification | None:
         message = Mail(
             from_email=From(settings.SEND_FROM_EMAIL),
             to_emails=To(notice.msg_meta.email),
             subject=Subject(notice.msg_meta.subject),
             html_content=HtmlContent(notice.msg_body),
         )
+        if priority <= 1:  # сообщения с низким приоритетом можно задержать для отправки в дневное время
+            send_datetime = get_send_datetime(notice.user_tz)
+            message.send_at = SendAt(send_at=int(send_datetime.timestamp()))
+
         try:
             response = self.sendgrid_client.send(message=message)
         except HTTPError:
@@ -57,7 +62,7 @@ class SendgridSender(BaseSender):
 
 
 class DebugSender(BaseSender):
-    def send(self, notice: EmailNotification) -> EmailNotification | None:
+    def send(self, notice: EmailNotification, priority: int) -> EmailNotification | None:
         message = EmailMessage()
         message["From"] = settings.SEND_FROM_EMAIL
         message["To"] = notice.msg_meta.email

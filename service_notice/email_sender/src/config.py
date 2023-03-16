@@ -1,3 +1,5 @@
+from datetime import time
+
 from pydantic import BaseSettings, Field
 
 
@@ -13,6 +15,8 @@ class Settings(BaseSettings):
     MAX_RETRIES: int = 3
     RETRY_INTERVAL_MS: int = 5000
     SENDGRID_API_KEY: str = "default_for_local_debug"
+    SEND_AFTER_TIME: time = time(hour=9, minute=0)
+    SEND_BEFORE_TIME: time = time(hour=21, minute=0)
 
 
 settings = Settings()
