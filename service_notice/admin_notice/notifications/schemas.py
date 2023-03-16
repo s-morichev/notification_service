@@ -20,7 +20,7 @@ class BaseModelMixin(BaseModel):
 
 
 class Message(BaseModelMixin):
-    x_request_id: UUID | NoneType
+    x_request_id: str | NoneType
     notice_id: UUID
     users_id: List[UUID]
     template_id: UUID | NoneType = 1

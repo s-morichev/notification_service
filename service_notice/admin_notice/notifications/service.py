@@ -24,7 +24,7 @@ def generate_message_for_sending(notification):
             except Exception as error:
                 logger.error(f'During converting user_id {id} to UUID error occurred - {error}')
                 continue
-    message = Message(x_request_id=uuid.uuid4(),
+    message = Message(x_request_id=str(uuid.uuid4()),
                       notice_id=notification.id,
                       users_id=users,
                       template_id=notification.template_id,
@@ -37,5 +37,6 @@ def generate_message_for_sending(notification):
 
 
 def send_message(message: Message):
-    response = requests.post(f'{AUTH_API_URL}/api/v1/publish', data=message.json())
+    response = requests.post(f'{AUTH_API_URL}/api/v1/publish', data=message.json(),
+                             headers={'X-Request-Id': message.x_request_id})
     return response
