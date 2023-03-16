@@ -39,16 +39,14 @@ def send_email(channel, method, properties, body, sender: BaseSender):
         notification = EmailNotification.parse_raw(body)
     except ValidationError:
         logger.exception("Error on parsing body %s", body)
+    else:
+        if (msg := sender.send(notification, priority=properties.priority)) is not None:
+            resend_properties = pika.BasicProperties(delivery_mode=2, priority=properties.priority)
+            channel.basic_publish(
+                exchange="", routing_key=settings.EMAIL_DLQ, properties=resend_properties, body=msg.json()
+            )
+    finally:
         channel.basic_ack(delivery_tag=method.delivery_tag)
-        return
-
-    if (msg := sender.send(notification, priority=properties.priority)) is not None:
-        resend_properties = pika.BasicProperties(delivery_mode=2, priority=properties.priority)
-        channel.basic_publish(
-            exchange="", routing_key=settings.EMAIL_DLQ, properties=resend_properties, body=msg.json()
-        )
-
-    channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def main():
