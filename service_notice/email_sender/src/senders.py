@@ -18,9 +18,12 @@ class BaseSender:
     def send(self, notice: EmailNotification):
         ...
 
-    def handle_unsent(self, notice: EmailNotification):
-        # TODO реализовать повторную отправку
-        pass
+    @staticmethod
+    def check_to_resend(notice: EmailNotification):
+        if notice.retries == settings.MAX_RETRIES:
+            return None
+        notice.retries += 1
+        return notice
 
 
 class SendgridSender(BaseSender):
@@ -38,13 +41,11 @@ class SendgridSender(BaseSender):
             response = self.sendgrid_client.send(message=message)
         except HTTPError:
             logger.exception("Error on sending email notification %s", notice.json())
-            self.handle_unsent(notice)
-            return
+            return self.check_to_resend(notice)
 
         if response.status_code != HTTPStatus.ACCEPTED:
             logger.exception("Error on sending email notification %s", notice.json())
-            self.handle_unsent(notice)
-            return
+            return self.check_to_resend(notice)
 
         logger.info("Send notification %s", notice.json())
 

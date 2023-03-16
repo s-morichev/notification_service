@@ -15,3 +15,4 @@ class EmailNotification(BaseModel):
     user_id: UUID
     msg_meta: EmailMetadata
     msg_body: str
+    retries: int = 0

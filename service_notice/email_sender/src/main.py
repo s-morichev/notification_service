@@ -42,7 +42,12 @@ def send_email(channel, method, properties, body, sender=None):
         channel.basic_ack(delivery_tag=method.delivery_tag)
         return
 
-    sender.send(notification)
+    if (msg := sender.send(notification)) is not None:
+        resend_properties = pika.BasicProperties(delivery_mode=2, priority=properties.priority)
+        channel.basic_publish(
+            exchange="", routing_key=settings.EMAIL_DLQ, properties=resend_properties, body=msg.json()
+        )
+
     channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
@@ -54,11 +59,21 @@ def main():
     callback = partial(send_email, sender=sender)
 
     channel = init_rabbit()
-    channel.queue_declare(queue=settings.EMAIL_QUEUE)
+
+    channel.queue_declare(queue=settings.EMAIL_QUEUE, durable=True, arguments={"x-max-priority": 10})
+    channel.queue_declare(
+        queue=settings.EMAIL_DLQ,
+        durable=True,
+        arguments={
+            "x-dead-letter-exchange": "",
+            "x-dead-letter-routing-key": settings.EMAIL_QUEUE,
+            "x-message-ttl": settings.RETRY_INTERVAL_MS,
+        },
+    )
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue=settings.EMAIL_QUEUE, on_message_callback=callback)
 
-    logger.info("Start listening on channel %s", settings.EMAIL_QUEUE)
+    logger.info("Start listening on queues %s, %s", settings.EMAIL_QUEUE, settings.EMAIL_DLQ)
     channel.start_consuming()
 
 
