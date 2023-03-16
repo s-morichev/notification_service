@@ -9,7 +9,7 @@ from pydantic import ValidationError
 import logging_config  # noqa
 from config import settings
 from models import EmailNotification
-from senders import DebugSender, SendgridSender
+from senders import BaseSender, DebugSender, SendgridSender
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def init_rabbit():
     return channel
 
 
-def send_email(channel, method, properties, body, sender=None):
+def send_email(channel, method, properties, body, sender: BaseSender | None = None):
     try:
         notification = EmailNotification.parse_raw(body)
     except ValidationError:

@@ -15,11 +15,17 @@ logger = logging.getLogger(__name__)
 
 class BaseSender:
     @abstractmethod
-    def send(self, notice: EmailNotification):
+    def send(self, notice: EmailNotification) -> EmailNotification | None:
+        """Отпрравляет уведомление по email.
+
+        В случае ошибок возвращает само уведомление для повторной отправки.
+        Возвращает None при успешной отправке или превышении максимального
+        количества попыток.
+        """
         ...
 
     @staticmethod
-    def check_to_resend(notice: EmailNotification):
+    def check_to_resend(notice: EmailNotification) -> EmailNotification | None:
         if notice.retries == settings.MAX_RETRIES:
             return None
         notice.retries += 1
@@ -30,7 +36,7 @@ class SendgridSender(BaseSender):
     def __init__(self):
         self.sendgrid_client = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
 
-    def send(self, notice: EmailNotification):
+    def send(self, notice: EmailNotification) -> EmailNotification | None:
         message = Mail(
             from_email=From(settings.SEND_FROM_EMAIL),
             to_emails=To(notice.msg_meta.email),
@@ -51,10 +57,11 @@ class SendgridSender(BaseSender):
 
 
 class DebugSender(BaseSender):
-    def send(self, notice: EmailNotification):
+    def send(self, notice: EmailNotification) -> EmailNotification | None:
         message = EmailMessage()
         message["From"] = settings.SEND_FROM_EMAIL
         message["To"] = notice.msg_meta.email
         message["Subject"] = notice.msg_meta.subject
         message.set_content(notice.msg_body)
         print(f"#---MESSAGE START---#\n{message}\n#---MESSAGE END---#")
+        return None
