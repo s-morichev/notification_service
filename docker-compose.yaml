@@ -128,6 +128,65 @@ services:
       - .env
     depends_on:
       - rabbitmq_notice
+  
+    postgres_notifications:
+    image: postgres:15.1-alpine
+    container_name: postgres_notifications
+    volumes:
+      - postgres_notifications_data:/var/lib/postgresql/data/
+      - ./config/sql/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5436:5432"
+    restart: always
+    environment:
+      - POSTGRES_USER=${PG_ADMIN_NOTICE_USER}
+      - POSTGRES_PASSWORD=${PG_ADMIN_NOTICE_PASSWORD}
+      - POSTGRES_DB=${PG_ADMIN_NOTICE_DB_NAME}
+
+  redis_notifications:
+    image: redis:7.0.5-alpine
+    container_name: redis_notifications
+    volumes:
+      - redis_notifications_data:/data
+    restart: always
+    expose:
+      - 63791
+    ports:
+      - "63791:6379"
+
+  admin_notifications:
+    container_name: admin_notifications
+    build:
+      context: service_notice/admin_notice
+      dockerfile: ./Dockerfile
+    command: /bin/bash -c "gunicorn --bind 0.0.0.0:8000 config.wsgi:application"
+    volumes:
+      - static_value:/code/static/
+      - media_value:/code/media/
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${DJANGO_ADMIN_NOTICE_PORT}:8000"
+    depends_on:
+      - redis_notifications
+      - postgres_notifications
+
+  task_worker:
+    container_name: task_worker
+    build:
+      context: service_notice/admin_notice
+      dockerfile: ./Dockerfile
+    command: ./scripts/run_celery.sh
+    volumes:
+      - worker_celery_data:/data
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - admin_notifications
+      - redis_notifications
+      - postgres_notifications
 
 volumes:
   postgres_auth_data:
@@ -135,3 +194,8 @@ volumes:
   rabbitmq_notice_data:
   redis_notice_data:
   postgres_notice_data:
+  postgres_notifications_data:
+  redis_notifications_data:
+  worker_celery_data:
+  static_value:
+  media_value:
