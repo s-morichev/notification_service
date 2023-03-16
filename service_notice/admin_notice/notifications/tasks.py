@@ -1,8 +1,8 @@
-#создаем список сообщений, а потом в цикле вызываем функцию publish и передаем туда message
 import logging
 from http import HTTPStatus
 
 from config.celery_app import app
+from django.utils import timezone
 
 from .models import Notification
 from .service import generate_message_for_sending, send_message
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 @app.task
 def send_notifications():
-    notifications = Notification.objects.filter(status='waiting')
+    notifications = Notification.objects.filter(status='waiting', scheduled_time__lte=timezone.now())
     for notification in notifications:
         try:
             message = generate_message_for_sending(notification)

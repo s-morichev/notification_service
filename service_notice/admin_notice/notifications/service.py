@@ -10,12 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def generate_message_for_sending(notification):
-    if notification.scheduled_time is None:
-        expire_at = datetime.now() + timedelta(hours=8)
-        priority = 1
-    else:
-        expire_at = notification.scheduled_time + timedelta(days=1)
-        priority = 0
+    expire_at = notification.scheduled_time + timedelta(days=1)
     users = []
     if notification.users_ids is not None:
         for id in notification.users_ids:
@@ -30,7 +25,7 @@ def generate_message_for_sending(notification):
                       template_id=notification.template_id,
                       extra={},
                       transport=notification.transport,
-                      priority=priority,
+                      priority=0,
                       msg_type=notification.type,
                       expire_at=expire_at)
     return message

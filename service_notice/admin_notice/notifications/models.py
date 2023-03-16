@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from .validators import validate_uuid
+from .validators import validate_uuid, validate_datetime
 
 
 class UUIDTimeStampedMixin(models.Model):
@@ -67,9 +67,7 @@ class Notification(UUIDTimeStampedMixin, models.Model):
         _('Method of sending'), max_length=50,
         choices=NotificationTransport.choices
     )
-    scheduled_time = models.DateTimeField(_("Time of sending"), blank=True, null=True)
-    send_now = models.BooleanField(_("Send now"), default=False,
-                                   help_text=_("Used only if scheduled_time is not selected"))
+    scheduled_time = models.DateTimeField(_("Time of sending"), validators=[validate_datetime])
     type = models.CharField(
         _('Type'),
         max_length=50,
