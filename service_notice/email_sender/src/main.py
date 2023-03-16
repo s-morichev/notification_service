@@ -34,7 +34,7 @@ def init_rabbit():
     return channel
 
 
-def send_email(channel, method, properties, body, sender: BaseSender | None = None):
+def send_email(channel, method, properties, body, sender: BaseSender):
     try:
         notification = EmailNotification.parse_raw(body)
     except ValidationError:

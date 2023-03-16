@@ -50,7 +50,7 @@ class SendgridSender(BaseSender):
             return self.check_to_resend(notice)
 
         if response.status_code != HTTPStatus.ACCEPTED:
-            logger.exception("Error on sending email notification %s", notice.json())
+            logger.error("Error on sending email notification %s", notice.json())
             return self.check_to_resend(notice)
 
         logger.info("Send notification %s", notice.json())
