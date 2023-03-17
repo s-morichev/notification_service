@@ -1,9 +1,9 @@
 import logging
 
+import backoff
 import psycopg2
 from psycopg2.extensions import connection as PGConnection
 from psycopg2.extras import DictCursor
-import backoff
 
 CHECK_QUERY = """
 SELECT id, subject, body
@@ -42,4 +42,4 @@ def get_template_from_db(template_id: str) -> tuple[str, str]:
     if result:
         return result[0]
     else:
-        return '', ''
+        return "", ""

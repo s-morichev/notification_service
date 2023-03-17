@@ -30,11 +30,11 @@ class Notice(CoreModel):
     priority: int = 0  #
     expire_at: datetime.datetime  #
 
-    @validator('x_request_id')
+    @validator("x_request_id")
     def validate_request_id(cls, value):
         # заменяем None на текст, иначе jaeger ругается
         if value is None:
-            return 'request_id: None'
+            return "request_id: None"
         return value
 
 

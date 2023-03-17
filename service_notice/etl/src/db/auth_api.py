@@ -4,7 +4,7 @@ from uuid import UUID
 
 import orjson
 import requests
-from requests.exceptions import RequestException, JSONDecodeError
+from requests.exceptions import JSONDecodeError, RequestException
 
 from core.config import settings
 from core.models import UserInfo
@@ -32,7 +32,7 @@ def get_users_info_from_auth(request_id: str, user_ids: list[UUID]) -> dict[UUID
                 logging.error(f"error call auth service. Error: {err}")
 
             else:
-                if users_info := data.get('users_info'):
+                if users_info := data.get("users_info"):
                     result = {item["user_id"]: UserInfo(**item) for item in users_info}
                     return result
 

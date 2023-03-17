@@ -56,7 +56,7 @@ class Extractor:
     def get_data(self):
         method_frame, header_frame, body = self.channel.basic_get(QUEUE_NOTICE, auto_ack=False)
         if method_frame:
-            logging.debug('extract message:{0}'.format(body))
+            logging.debug("extract message:{0}".format(body))
             self.current_delivery_tag = method_frame.delivery_tag
             notice_dict = orjson.loads(body)
             return Notice(**notice_dict)
@@ -67,7 +67,7 @@ class Extractor:
 
 class Transformer:
     @staticmethod
-    def get_msg_meta(data: Notice, user_info: UserInfo, subject: str = 'Movies') -> dict | None:
+    def get_msg_meta(data: Notice, user_info: UserInfo, subject: str = "Movies") -> dict | None:
         transport = data.transport
         match transport:
             case Transport.EMAIL:
@@ -94,11 +94,11 @@ class Transformer:
             window_count = math.ceil(len(user_lst) / batch_size)
             for window in range(window_count):
                 start = window * batch_size
-                users_batch = user_lst[start: start + batch_size]
+                users_batch = user_lst[start : start + batch_size]
                 user_info_dict = get_users_info(request_id, users_batch)
                 # TODO что делать с пользователями без user_info?
                 if len(users_batch) > len(user_info_dict):
-                    logging.debug('Not found users info: {0}'.format(len(users_batch)-len(user_info_dict)))
+                    logging.debug("Not found users info: {0}".format(len(users_batch) - len(user_info_dict)))
                 yield from user_info_dict.values()
 
         with tracer.start_as_current_span("etl_transform") as span:
