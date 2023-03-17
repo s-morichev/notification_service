@@ -13,5 +13,7 @@ class EmailNotification(BaseModel):
     notice_id: UUID
     msg_id: UUID
     user_id: UUID
+    user_tz: str
     msg_meta: EmailMetadata
     msg_body: str
+    retries: int = 0
