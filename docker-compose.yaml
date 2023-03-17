@@ -147,8 +147,6 @@ services:
     volumes:
       - redis_notifications_data:/data
     restart: always
-#    expose:
-#      - 63791
     ports:
       - "63791:6379"
 
