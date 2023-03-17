@@ -27,3 +27,4 @@ if settings.DEBUG:
     LOGGING_CONFIG["root"]["level"] = "DEBUG"
 
 logging.config.dictConfig(LOGGING_CONFIG)
+logging.getLogger("pika").setLevel(logging.WARNING)

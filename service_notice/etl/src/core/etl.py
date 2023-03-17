@@ -1,3 +1,4 @@
+import datetime
 import logging
 import math
 import time
@@ -12,7 +13,7 @@ from opentelemetry import trace
 from core.constants import QUEUE_NOTICE, Mark, Transport
 from core.models import Message, Notice, UserInfo
 from core.utils import get_ttl_from_datetime
-from db.auth_api import get_user_info_from_auth, get_users_info_from_auth
+from db.auth_api import get_users_info_from_auth
 from db.pg import get_template_from_db
 from db.rmq import RabbitMQ
 from db.storage import get_mark, set_mark
@@ -23,28 +24,16 @@ logging.getLogger("pika").setLevel(logging.WARNING)
 tracer = trace.get_tracer(__name__)
 
 
-# TODO завернуть в кэш
-def get_template(template_id: str) -> Template:
-    template_str = get_template_from_db(template_id)
-    return Template(template_str)
-
-
-def get_user_info(request_id: str, user_id: uuid.UUID) -> UserInfo | None:
-    # TODO убрать - это для тестов
-    if user_id == uuid.UUID(int=0):
-        return UserInfo(user_id=user_id, email="user@movies.com", username="Jon Doe", phone="5555-4444")
-
-    result = get_user_info_from_auth(request_id, user_id)
-    return result
+# TODO можно завернуть в кэш
+def get_template(template_id: uuid.UUID) -> Template:
+    subject, template_str = get_template_from_db(str(template_id))
+    template = Template(template_str)
+    template.subject = subject
+    return template
 
 
 def get_users_info(request_id: str, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, UserInfo]:
     result = get_users_info_from_auth(request_id, user_ids)
-
-    # TODO убрать - это для тестов
-    result[uuid.UUID(int=0)] = UserInfo(
-        user_id=uuid.UUID(int=0), email="user@movies.com", username="Jon Doe", phone="5555-4444"
-    )
     return result
 
 
@@ -62,13 +51,13 @@ class Extractor:
     def __init__(self, rmq: RabbitMQ):
         self.channel = rmq.connection.channel()
         self.channel.basic_qos(prefetch_count=1)
+        self.channel.queue_declare(queue="notice", durable=True, arguments={"x-max-priority": 10})
         self.current_delivery_tag = None
 
     def get_data(self):
         method_frame, header_frame, body = self.channel.basic_get(QUEUE_NOTICE, auto_ack=False)
         if method_frame:
-            nl = "\n"
-            logging.debug(f"extract: {nl} method:{method_frame},{nl} header:{header_frame},{nl} body:{body}")
+            logging.debug("extract message:{0}".format(body))
             self.current_delivery_tag = method_frame.delivery_tag
             notice_dict = orjson.loads(body)
             return Notice(**notice_dict)
@@ -79,13 +68,12 @@ class Extractor:
 
 class Transformer:
     @staticmethod
-    def get_msg_meta(data: Notice, user_info: UserInfo) -> dict | None:
+    def get_msg_meta(data: Notice, user_info: UserInfo, subject: str = "Movies") -> dict | None:
         transport = data.transport
         match transport:
             case Transport.EMAIL:
                 if user_info.email:
-                    # TODO надо бы придумать где тему письма получать
-                    return {"email": user_info.email, "subject": "Movies Notice"}
+                    return {"email": user_info.email, "subject": subject}
 
             case Transport.SMS:
                 if user_info.phone:
@@ -107,21 +95,27 @@ class Transformer:
             window_count = math.ceil(len(user_lst) / batch_size)
             for window in range(window_count):
                 start = window * batch_size
-                users_batch = user_lst[start: start + batch_size]
+                users_batch = user_lst[start : start + batch_size]
                 user_info_dict = get_users_info(request_id, users_batch)
                 # TODO что делать с пользователями без user_info?
+                if len(users_batch) > len(user_info_dict):
+                    logging.debug("Not found users info: {0}".format(len(users_batch) - len(user_info_dict)))
                 yield from user_info_dict.values()
 
         with tracer.start_as_current_span("etl_transform") as span:
             span.set_attribute("http.request_id", data.x_request_id)
             span.set_attribute("transport", data.transport)
 
+            if data.expire_at < datetime.datetime.now(tz=datetime.timezone.utc):
+                logging.debug("message rejected due expire date: {0}".format(data.expire_at))
+                return None
+
             template = get_template(data.template_id)
             notice_id = data.notice_id
             ttl = get_ttl_from_datetime(data.expire_at)
             # узнаю повторная ли это обработка
             is_repeat = is_processed(notice_id, 0)
-            users = data.users
+            users = data.users_id
 
             if not is_repeat:
                 mark_processed(notice_id, 0, ttl=ttl)
@@ -130,7 +124,7 @@ class Transformer:
                 # не очень то оптимально....
                 # с учетом того, что данные отправляются последовательно, можно
                 # в дальнейшем оптимизировать поиск последнего обработанного пользователя
-                users = filter(lambda x: is_processed(notice_id, x), users)
+                users = list(filter(lambda x: not is_processed(notice_id, x), users))
 
             for user_info in user_info_lst(data.x_request_id, users):
                 # пропускаем, если пользователь отказался от некоторых рассылок
@@ -140,7 +134,7 @@ class Transformer:
                     continue
 
                 msg_body = template.render(user_info.dict() | data.extra)
-                msg_meta = self.get_msg_meta(data, user_info)
+                msg_meta = self.get_msg_meta(data, user_info, template.subject)
                 # для случаев, когда не можем отправить сообщение,
                 # потому что не хватает данных для отправки, например телефона
                 if msg_meta is None:

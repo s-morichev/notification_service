@@ -1,9 +1,9 @@
 import logging
 from uuid import UUID
 
+import backoff
 import redis
 from redis.exceptions import ConnectionError
-import backoff
 
 from core.constants import Mark
 

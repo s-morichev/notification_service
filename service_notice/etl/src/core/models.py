@@ -2,7 +2,7 @@ import datetime
 from uuid import UUID
 
 import orjson
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 def orjson_dumps(v, *, default):
@@ -22,13 +22,27 @@ class CoreModel(BaseModel):
 class Notice(CoreModel):
     x_request_id: str | None  # для трассировки сообщений
     notice_id: UUID  # id сообщения
-    users: list[UUID]  # список на рассылку, может быть 1
-    template_id: str  # шаблон сообщения
+    users_id: list[UUID]  # список на рассылку, может быть 1
+    template_id: UUID  # шаблон сообщения
     extra: dict = Field(default_factory=dict)  # дополнительные поля для сообщения
     transport: str  # транспорт - 'mail', 'sms', 'ws', 'push',....
     msg_type: str  # 'info', 'promo', ....
     priority: int = 0  #
     expire_at: datetime.datetime  #
+
+    @validator("x_request_id")
+    def validate_request_id(cls, value):
+        # заменяем None на текст, иначе jaeger ругается
+        if value is None:
+            return "request_id: None"
+        return value
+
+    @validator("expire_at")
+    def validate_expire_at(cls, date):
+        # если дата без часового пояса - это UTC
+        if not date.tzinfo:
+            return date.replace(tzinfo=datetime.timezone.utc)
+        return date
 
 
 class Message(CoreModel):

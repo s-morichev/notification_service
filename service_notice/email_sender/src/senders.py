@@ -1,3 +1,4 @@
+import datetime
 import logging
 from abc import abstractmethod
 from email.message import EmailMessage
@@ -68,5 +69,11 @@ class DebugSender(BaseSender):
         message["To"] = notice.msg_meta.email
         message["Subject"] = notice.msg_meta.subject
         message.set_content(notice.msg_body)
-        print(f"#---MESSAGE START---#\n{message}\n#---MESSAGE END---#")
+        if priority <= 1:
+            send_datetime = get_send_datetime(notice.user_tz)
+            send_at = send_datetime.isoformat()
+        else:
+            send_at = datetime.datetime.utcnow().isoformat()
+        print(f"Email would be send at {send_at}")
+        print(f"#---MESSAGE START---#\n{message}\n#---MESSAGE END---#\n")
         return None

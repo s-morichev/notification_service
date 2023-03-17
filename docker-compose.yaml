@@ -1,5 +1,14 @@
 services:
-  # название сервиса должно быть одинаковым с prod, чтобы не заводить отдельную переменную окружения
+  nginx:
+    image: nginx:1.23.3-alpine
+    container_name: nginx_notice
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+      - static_volume:/code/static/:ro
+    ports:
+      - "80:80"
+
   jaeger_agent:
     image: jaegertracing/all-in-one:1.41
     container_name: jaeger
@@ -13,8 +22,6 @@ services:
       context: service_auth
       dockerfile: ./docker/Dockerfile
       target: development
-      tags:
-        - "auth"
     container_name: auth
     volumes:
       - ./service_auth/src/:/opt/app/
@@ -70,18 +77,6 @@ services:
     ports:
       - "${REDIS_NOTICE_PORT}:6379"
 
-  postgres_notice:
-    image: postgres:15.1-alpine
-    container_name: postgres_notice
-    volumes:
-      - postgres_notice_data:/var/lib/postgresql/data/
-    ports:
-      - "${PG_NOTICE_PORT}:5432"
-    environment:
-      - POSTGRES_USER=${PG_NOTICE_USER}
-      - POSTGRES_PASSWORD=${PG_NOTICE_PASSWORD}
-      - POSTGRES_DB=${PG_NOTICE_DB_NAME}
-
   email_sender:
     build:
       context: service_notice/email_sender
@@ -117,19 +112,22 @@ services:
       - .env
     depends_on:
       - rabbitmq_notice
-      - postgres_notice
+      - postgres_notifications
       - redis_notice
 
   api_notice:
     build:
       context: service_notice/api
       dockerfile: ./Dockerfile
+    container_name: api_notice
+    ports:
+      - "8008:8000"
     env_file:
       - .env
     depends_on:
       - rabbitmq_notice
   
-    postgres_notifications:
+  postgres_notifications:
     image: postgres:15.1-alpine
     container_name: postgres_notifications
     volumes:
@@ -149,8 +147,6 @@ services:
     volumes:
       - redis_notifications_data:/data
     restart: always
-    expose:
-      - 63791
     ports:
       - "63791:6379"
 
@@ -161,8 +157,7 @@ services:
       dockerfile: ./Dockerfile
     command: /bin/bash -c "gunicorn --bind 0.0.0.0:8000 config.wsgi:application"
     volumes:
-      - static_value:/code/static/
-      - media_value:/code/media/
+      - static_volume:/code/static/
     restart: always
     env_file:
       - .env
@@ -193,9 +188,7 @@ volumes:
   redis_auth_data:
   rabbitmq_notice_data:
   redis_notice_data:
-  postgres_notice_data:
   postgres_notifications_data:
   redis_notifications_data:
   worker_celery_data:
-  static_value:
-  media_value:
+  static_volume:

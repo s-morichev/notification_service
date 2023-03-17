@@ -1,8 +1,8 @@
 import logging
 
+import backoff
 import pika
 from pika.exceptions import AMQPConnectionError
-import backoff
 
 
 class RabbitMQ:

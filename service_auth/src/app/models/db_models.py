@@ -52,6 +52,7 @@ class User(db.Model):
     username = Column(String(255))
     phone = Column(String(50))
     reject_notice = Column(JSONB, default=list)
+    time_zone = Column(String(50), default="UTC")
     registered_on = Column(DateTime(timezone=True), default=now_with_tz_info, nullable=False)
     # subscribe_expiration
     is_confirmed = Column(Boolean, default=False)

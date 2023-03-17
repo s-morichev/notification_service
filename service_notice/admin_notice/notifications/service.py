@@ -3,7 +3,7 @@ import requests
 import uuid
 from datetime import datetime, timedelta
 
-from config.components.common import AUTH_API_URL
+from config.components.common import API_NOTIFICATIONS_URL
 from .schemas import Message
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,6 @@ def generate_message_for_sending(notification):
 
 
 def send_message(message: Message):
-    response = requests.post(f'{AUTH_API_URL}/api/v1/publish', data=message.json(),
+    response = requests.post(f'{API_NOTIFICATIONS_URL}/api/v1/publish', data=message.json(),
                              headers={'X-Request-Id': message.x_request_id})
     return response
