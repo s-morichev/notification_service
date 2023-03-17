@@ -1,12 +1,14 @@
+include .env
+
 auth-init:
 	docker compose exec auth flask db upgrade
 	docker compose exec auth flask insert-roles
-	docker compose exec auth flask createsuperuser --email superuser --password password
+	docker compose exec auth flask createsuperuser --email ${AUTH_SUPERUSER_LOGIN} --password ${AUTH_SUPERUSER_PASSWORD}
 
 admin-notifications-init:
 	docker compose exec admin_notifications python manage.py migrate
 	docker compose exec admin_notifications python manage.py collectstatic --no-input
-	docker compose exec -e DJANGO_SUPERUSER_PASSWORD=password admin_notifications python manage.py createsuperuser --username superuser --email admin@example.com --no-input
+	docker compose exec -e DJANGO_SUPERUSER_PASSWORD=${DJANGO_ADMIN_NOTICE_SUPERUSER_PASSWORD} admin_notifications python manage.py createsuperuser --username ${DJANGO_ADMIN_NOTICE_SUPERUSER_LOGIN} --email admin@example.com --no-input
 
 
 dev-run:
