@@ -12,7 +12,7 @@ from opentelemetry import trace
 from core.constants import QUEUE_NOTICE, Mark, Transport
 from core.models import Message, Notice, UserInfo
 from core.utils import get_ttl_from_datetime
-from db.auth_api import get_user_info_from_auth, get_users_info_from_auth
+from db.auth_api import get_users_info_from_auth
 from db.pg import get_template_from_db
 from db.rmq import RabbitMQ
 from db.storage import get_mark, set_mark
@@ -67,7 +67,7 @@ class Extractor:
 
 class Transformer:
     @staticmethod
-    def get_msg_meta(data: Notice, user_info: UserInfo, subject: str = '') -> dict | None:
+    def get_msg_meta(data: Notice, user_info: UserInfo, subject: str = 'Movies') -> dict | None:
         transport = data.transport
         match transport:
             case Transport.EMAIL:
