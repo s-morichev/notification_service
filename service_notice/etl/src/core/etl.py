@@ -1,3 +1,4 @@
+import datetime
 import logging
 import math
 import time
@@ -94,7 +95,7 @@ class Transformer:
             window_count = math.ceil(len(user_lst) / batch_size)
             for window in range(window_count):
                 start = window * batch_size
-                users_batch = user_lst[start : start + batch_size]
+                users_batch = user_lst[start: start + batch_size]
                 user_info_dict = get_users_info(request_id, users_batch)
                 # TODO что делать с пользователями без user_info?
                 if len(users_batch) > len(user_info_dict):
@@ -104,6 +105,10 @@ class Transformer:
         with tracer.start_as_current_span("etl_transform") as span:
             span.set_attribute("http.request_id", data.x_request_id)
             span.set_attribute("transport", data.transport)
+
+            if data.expire_at < datetime.datetime.now():
+                logging.debug('message rejected due expire date: {0}'.format(data.expire_at))
+                return None
 
             template = get_template(data.template_id)
             notice_id = data.notice_id
@@ -119,7 +124,7 @@ class Transformer:
                 # не очень то оптимально....
                 # с учетом того, что данные отправляются последовательно, можно
                 # в дальнейшем оптимизировать поиск последнего обработанного пользователя
-                users = list(filter(lambda x: is_processed(notice_id, x), users))
+                users = list(filter(lambda x: not is_processed(notice_id, x), users))
 
             for user_info in user_info_lst(data.x_request_id, users):
                 # пропускаем, если пользователь отказался от некоторых рассылок
