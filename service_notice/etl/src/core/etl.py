@@ -68,13 +68,12 @@ class Extractor:
 
 class Transformer:
     @staticmethod
-    def get_msg_meta(data: Notice, user_info: UserInfo) -> dict | None:
+    def get_msg_meta(data: Notice, user_info: UserInfo, subject: str = '') -> dict | None:
         transport = data.transport
         match transport:
             case Transport.EMAIL:
                 if user_info.email:
-                    # TODO надо бы придумать где тему письма получать
-                    return {"email": user_info.email, "subject": "Movies Notice"}
+                    return {"email": user_info.email, "subject": subject}
 
             case Transport.SMS:
                 if user_info.phone:
@@ -129,7 +128,7 @@ class Transformer:
                     continue
 
                 msg_body = template.render(user_info.dict() | data.extra)
-                msg_meta = self.get_msg_meta(data, user_info)
+                msg_meta = self.get_msg_meta(data, user_info, template.subject)
                 # для случаев, когда не можем отправить сообщение,
                 # потому что не хватает данных для отправки, например телефона
                 if msg_meta is None:
