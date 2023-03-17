@@ -106,7 +106,7 @@ class Transformer:
             span.set_attribute("http.request_id", data.x_request_id)
             span.set_attribute("transport", data.transport)
 
-            if data.expire_at < datetime.datetime.now():
+            if data.expire_at < datetime.datetime.now(tz=datetime.timezone.utc):
                 logging.debug('message rejected due expire date: {0}'.format(data.expire_at))
                 return None
 

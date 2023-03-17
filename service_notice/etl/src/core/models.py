@@ -37,6 +37,13 @@ class Notice(CoreModel):
             return "request_id: None"
         return value
 
+    @validator("expire_at")
+    def validate_expire_at(cls, date):
+        # если дата без часового пояса - это UTC
+        if not date.tzinfo:
+            return date.replace(tzinfo=datetime.timezone.utc)
+        return date
+
 
 class Message(CoreModel):
     x_request_id: str | None  # для трассировки сообщений
