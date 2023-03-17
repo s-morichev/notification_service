@@ -13,5 +13,5 @@ class Mark(Enum):
 class Transport(str, Enum):
     EMAIL = "email"
     SMS = "sms"
-    WEBSOCKET = "ws"
+    WEBSOCKET = "websocket"
     PUSH = "push"
