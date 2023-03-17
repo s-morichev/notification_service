@@ -19,6 +19,7 @@ depends_on = None
 def upgrade():
     with op.batch_alter_table("users", schema=None) as batch_op:
         batch_op.add_column(sa.Column("phone", sa.String(length=50), nullable=True))
+        batch_op.add_column(sa.Column("time_zone", sa.String(length=50), nullable=True))
         batch_op.add_column(sa.Column("reject_notice", postgresql.JSONB(astext_type=sa.Text()), nullable=True))
 
 
@@ -26,3 +27,4 @@ def downgrade():
     with op.batch_alter_table("users", schema=None) as batch_op:
         batch_op.drop_column("reject_notice")
         batch_op.drop_column("phone")
+        batch_op.drop_column("time_zone")

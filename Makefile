@@ -16,6 +16,7 @@ dev-run:
 	sleep 5  # ждем запуск постгрес для применения миграций
 	$(MAKE) auth-init
 	$(MAKE) admin-notifications-init
+	docker compose exec auth python fake_data.py
 
 
 format:
