@@ -62,6 +62,7 @@ class Extractor:
     def __init__(self, rmq: RabbitMQ):
         self.channel = rmq.connection.channel()
         self.channel.basic_qos(prefetch_count=1)
+        self.channel.queue_declare(queue="notice", durable=True, arguments={"x-max-priority": 10})
         self.current_delivery_tag = None
 
     def get_data(self):
@@ -121,7 +122,7 @@ class Transformer:
             ttl = get_ttl_from_datetime(data.expire_at)
             # узнаю повторная ли это обработка
             is_repeat = is_processed(notice_id, 0)
-            users = data.users
+            users = data.users_id
 
             if not is_repeat:
                 mark_processed(notice_id, 0, ttl=ttl)
@@ -130,7 +131,7 @@ class Transformer:
                 # не очень то оптимально....
                 # с учетом того, что данные отправляются последовательно, можно
                 # в дальнейшем оптимизировать поиск последнего обработанного пользователя
-                users = filter(lambda x: is_processed(notice_id, x), users)
+                users = list(filter(lambda x: is_processed(notice_id, x), users))
 
             for user_info in user_info_lst(data.x_request_id, users):
                 # пропускаем, если пользователь отказался от некоторых рассылок

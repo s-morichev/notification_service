@@ -22,7 +22,7 @@ class CoreModel(BaseModel):
 class Notice(CoreModel):
     x_request_id: str | None  # для трассировки сообщений
     notice_id: UUID  # id сообщения
-    users: list[UUID]  # список на рассылку, может быть 1
+    users_id: list[UUID]  # список на рассылку, может быть 1
     template_id: str  # шаблон сообщения
     extra: dict = Field(default_factory=dict)  # дополнительные поля для сообщения
     transport: str  # транспорт - 'mail', 'sms', 'ws', 'push',....

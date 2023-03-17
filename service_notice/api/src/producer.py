@@ -40,7 +40,7 @@ class RabbitMQ(BaseProducer):
 
     async def create_queue(self, ):
         async with self.connection.channel() as channel:
-            self.queue = await channel.declare_queue(settings.QUEUE_NAME, durable=True)
+            self.queue = await channel.declare_queue(settings.QUEUE_NAME, durable=True, arguments={"x-max-priority": 10})
             logging.info("queue created")
 
     async def publish(self, message: dict) -> str:
