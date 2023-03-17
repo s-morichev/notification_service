@@ -2,7 +2,7 @@ import datetime
 from uuid import UUID
 
 import orjson
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 def orjson_dumps(v, *, default):
@@ -29,6 +29,13 @@ class Notice(CoreModel):
     msg_type: str  # 'info', 'promo', ....
     priority: int = 0  #
     expire_at: datetime.datetime  #
+
+    @validator('x_request_id')
+    def validate_request_id(cls, value):
+        # заменяем None на текст, иначе jaeger ругается
+        if value is None:
+            return 'request_id: None'
+        return value
 
 
 class Message(CoreModel):
