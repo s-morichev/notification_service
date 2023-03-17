@@ -9,7 +9,7 @@ LOCALE_PATHS = ['notifications/locale']
 
 DEBUG = os.environ.get('DJANGO_ADMIN_NOTICE_DEBUG', False) == 'True'
 
-ALLOWED_HOSTS = [os.environ.get('DJANGO_ADMIN_NOTICE_HOST')]
+ALLOWED_HOSTS = os.environ.get('DJANGO_ADMIN_NOTICE_ALLOWED_HOSTS').split()
 
 INSTALLED_APPS = [
     'debug_toolbar',
@@ -80,16 +80,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-if DEBUG:
-    STATICFILES_DIRS = [
-        os.path.join(BASE_DIR, 'static')
-    ]
-
-else:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

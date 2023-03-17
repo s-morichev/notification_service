@@ -35,9 +35,6 @@ def close_db():
 def main():
     init_db()
 
-    # TODO Убрать в проде! Добавляет фейковые данные
-    fake_data(db_rmq.db)
-
     if settings.ENABLE_TRACER:
         init_tracer()
 
