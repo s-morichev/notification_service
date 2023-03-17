@@ -24,27 +24,15 @@ tracer = trace.get_tracer(__name__)
 
 
 # TODO завернуть в кэш
-def get_template(template_id: str) -> Template:
-    template_str = get_template_from_db(template_id)
-    return Template(template_str)
-
-
-def get_user_info(request_id: str, user_id: uuid.UUID) -> UserInfo | None:
-    # TODO убрать - это для тестов
-    if user_id == uuid.UUID(int=0):
-        return UserInfo(user_id=user_id, email="user@movies.com", username="Jon Doe", phone="5555-4444")
-
-    result = get_user_info_from_auth(request_id, user_id)
-    return result
+def get_template(template_id: uuid.UUID) -> Template:
+    subject, template_str = get_template_from_db(str(template_id))
+    template = Template(template_str)
+    template.subject = subject
+    return template
 
 
 def get_users_info(request_id: str, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, UserInfo]:
     result = get_users_info_from_auth(request_id, user_ids)
-
-    # TODO убрать - это для тестов
-    result[uuid.UUID(int=0)] = UserInfo(
-        user_id=uuid.UUID(int=0), email="user@movies.com", username="Jon Doe", phone="5555-4444"
-    )
     return result
 
 

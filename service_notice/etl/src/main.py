@@ -5,7 +5,6 @@ import db.rmq as db_rmq
 import db.storage as db_redis
 from core import logging_config  # noqa
 from core.config import settings
-from core.dummy import fake_data
 from core.etl import ETL
 from core.tracer import init_tracer
 
