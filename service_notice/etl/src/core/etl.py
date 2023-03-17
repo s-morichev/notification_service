@@ -24,7 +24,7 @@ logging.getLogger("pika").setLevel(logging.WARNING)
 tracer = trace.get_tracer(__name__)
 
 
-# TODO завернуть в кэш
+# TODO можно завернуть в кэш
 def get_template(template_id: uuid.UUID) -> Template:
     subject, template_str = get_template_from_db(str(template_id))
     template = Template(template_str)
@@ -95,7 +95,7 @@ class Transformer:
             window_count = math.ceil(len(user_lst) / batch_size)
             for window in range(window_count):
                 start = window * batch_size
-                users_batch = user_lst[start: start + batch_size]
+                users_batch = user_lst[start : start + batch_size]
                 user_info_dict = get_users_info(request_id, users_batch)
                 # TODO что делать с пользователями без user_info?
                 if len(users_batch) > len(user_info_dict):
@@ -107,7 +107,7 @@ class Transformer:
             span.set_attribute("transport", data.transport)
 
             if data.expire_at < datetime.datetime.now(tz=datetime.timezone.utc):
-                logging.debug('message rejected due expire date: {0}'.format(data.expire_at))
+                logging.debug("message rejected due expire date: {0}".format(data.expire_at))
                 return None
 
             template = get_template(data.template_id)
