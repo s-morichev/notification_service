@@ -1,7 +1,7 @@
 import logging
 import requests
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from config.components.common import API_NOTIFICATIONS_URL
 from .schemas import Message
