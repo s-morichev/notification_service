@@ -31,7 +31,7 @@ class NotificationType(models.TextChoices):
 
 class Template(UUIDTimeStampedMixin, models.Model):
     name = models.CharField(_('Name'), max_length=254, unique=True, help_text="Template name")
-    description = models.TextField(_('Description'), blank=True, null=True, help_text="Template description")
+    description = models.TextField(_('Description'), blank=True, help_text="Template description")
     subject = models.CharField(
         _('Subject'),
         max_length=254,
@@ -57,9 +57,9 @@ class NotificationSendStatus(models.TextChoices):
 
 class Notification(UUIDTimeStampedMixin, models.Model):
     name = models.CharField(_('Name'), max_length=254)
-    description = models.TextField(_('Description'), blank=True, null=True)
+    description = models.TextField(_('Description'), blank=True)
     users_ids = ArrayField(
-        models.CharField(max_length=255), validators=[validate_uuid], blank=True, null=True, default=list,
+        models.CharField(max_length=255), validators=[validate_uuid], blank=False, default=list,
         help_text=_('Recipients UUIDs. For example: 74f4c5ff-2432-4594-ae49-2f9f48f274ed,'
                     ' 2b2a5654-7dd3-4ea4-ae19-0d9a4a7999ba'), verbose_name=_('Recipients'))
     template = models.ForeignKey(Template, on_delete=models.PROTECT, verbose_name=_('Template'))
