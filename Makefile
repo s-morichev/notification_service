@@ -18,6 +18,9 @@ dev-run:
 	$(MAKE) admin-notifications-init
 	docker compose exec auth python fake_data.py
 
+prod-run:
+	docker compose -f docker-compose.prod.yaml up --build -d
+
 
 format:
 	black .
