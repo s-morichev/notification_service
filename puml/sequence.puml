@@ -1,0 +1,26 @@
+@startuml
+
+participant admin as "Admin\npanel"
+database pg_notice as "Postgres"
+participant api as "API\nService"
+queue unprocessed as "Unprocessed\nmessages"
+participant worker as "Worker"
+queue processed as "Processed\nmessages"
+database mongo as "MongoDB"
+participant senders as "Senders"
+actor user as "User"
+
+== Подготовка рассылок ==
+admin -> pg_notice : Создание шаблона\nнастройка рассылки
+
+== Обработка уведомлений ==
+[-> api : Запрос на\nотправку\nуведомления
+api -> unprocessed : Необработанное\nуведомление
+unprocessed -> worker: Необработанное\nуведомление
+worker -> pg_notice : Запрос шаблона
+worker -> mongo : Запись о уведомлении
+worker -> processed : Готовое\nуведомление
+processed -> senders : Готовое\nуведомление
+senders -> user : Отправка\nуведомления
+senders -> mongo : Подтверждение\nотправки
+@enduml

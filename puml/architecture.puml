@@ -1,0 +1,40 @@
+@startuml
+!include <C4/C4_Container>
+title Notifications Service Architecture
+HIDE_STEREOTYPE()
+SHOW_PERSON_OUTLINE()
+
+System_Boundary(admin_panel, "Admin Panel") {
+Container(admin, "Admin Panel" ,"Django, Celery", "1. Создает шаблоны писем\n2. Планирует рассылки")
+ContainerDb(pg_notice, "Postgres")
+Container(celery, "Celery Worker" ,"", "1. Передает запланированные рассылки на отправку")
+}
+
+Container(api, "Notification API" ,"Fastapi, RabbitMQ", "1. Принимает уведомления, валидирует и кладет в очередь обработку")
+ContainerQueue(unprocessed, "Unprocessed\nmessages", "RabbitMQ")
+Container(worker_notice, "Worker", "RabbitMQ, Redis", "1. Запрашивает необходимую информацию и формирует сообщение.\n2. Кладет готовое сообщение в очередь на отправку.")
+ContainerDb(mongo, "MongoDB",)
+ContainerQueue(email, "Email\nmessages", "RabbitMQ")
+ContainerQueue(websocket, "Websocket\nmessages", "RabbitMQ")
+Container(email_sender, "Email\nsender" ,"",)
+Container(websocket_sender, "Websocket\nsender" ,"",)
+Container_Ext(auth, "Auth service api" ,"", "Предоставляет контактную информацию (имя, почта)")
+Container_Ext(other, "Other Services" ,"", "Передают уведомления на отправку")
+
+Rel(admin, pg_notice, " ")
+Rel(admin, api, " ")
+Rel(admin, celery, " ")
+Rel(celery, api, " ")
+Rel(other, api, " ")
+Rel(api, unprocessed, " ")
+Rel(unprocessed, worker_notice, " ")
+Rel(worker_notice, pg_notice, " ")
+Rel_R(worker_notice, auth, " ")
+Rel(worker_notice, email, " ")
+Rel(worker_notice, websocket, " ")
+Rel(email, email_sender, " ")
+Rel(websocket, websocket_sender, " ")
+Rel_L(worker_notice, mongo, " ")
+Rel(email, mongo, " ")
+Rel(websocket, mongo, " ")
+@enduml
